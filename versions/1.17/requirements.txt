@@ -1,0 +1,9 @@
+PySide6>=6.8,<7
+faster-whisper>=1.1,<2
+av>=14,<17
+Pillow>=11,<13
+numpy>=2,<3
+onnxruntime>=1.20,<2
+nvidia-cublas-cu12>=12,<13
+nvidia-cudnn-cu12>=9,<10
+pyinstaller>=6.12,<7
