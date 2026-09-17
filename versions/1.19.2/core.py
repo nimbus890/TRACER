@@ -218,9 +218,19 @@ def remove_from_collection(state, collection_id, video_ids):
 
 
 def collection_video_ids(state, collection_id):
-    """Return the set of video IDs in a collection, or None for 'all'."""
+    """Return the set of video IDs in a collection or project, or None for 'all'."""
     if collection_id == 'all':
         return None  # None means show everything
+    if isinstance(collection_id, str) and collection_id.startswith('proj_'):
+        proj_id = collection_id[5:]
+        project = next((p for p in state.get('projects', []) if p.get('id') == proj_id), None)
+        if project:
+            matched_ids = set()
+            proj_files = {str(Path(v['path'])).casefold() for f in project.get('folders', []) for v in f.get('files', []) if isinstance(v, dict) and 'path' in v}
+            for r in state.get('results', []):
+                if r.get('project_id') == proj_id or str(Path(r.get('source', ''))).casefold() in proj_files:
+                    matched_ids.add(r.get('id'))
+            return matched_ids
     for c in state.get('collections', []):
         if c.get('id') == collection_id:
             return set(c.get('video_ids', []))

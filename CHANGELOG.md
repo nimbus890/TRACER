@@ -7,11 +7,13 @@ All notable changes to Tracer are documented here. Versions follow the existing 
 ## 1.19.2 — Midday Editorial Redesign
 
 - **Midday-Inspired Dark Editorial Theme**: Unified palette using near-black `#0c0c0c` backgrounds, refined neutral grays (`#ededed` / `#878787` / `#5a5a5a`), crisp focus states, and warm amber search highlights (`#f59e0b`).
-- **Sidebar & Navigation Overhaul**: Expanded 180px navigation rail with icon-plus-text labels, dynamic Collections browser with quick creation (`+`) and right-click context menu (rename, delete, export files), and bottom-pinned Settings. Resource monitors (GPU / VRAM / RAM) and app version preserved.
+- **Sidebar & Navigation Overhaul**: Expanded navigation rail with dynamic Collections and Projects browser, prominent `+` creation button for both new collections and projects, right-click context menu (rename, delete, export files), and project-based Library filtering. Resource monitors (GPU / VRAM / RAM) and app version preserved.
 - **Library Table View**: Replaced flat list with a rich 5-column table displaying video checkboxes, rounded video thumbnails, bold titles, duration, hit badges, and overflow menus (`···`).
-- **Search & Scope Filters**: Upgraded search bar with dual dropdown selectors: source filter ("All sources" / collections) and scope filter ("Transcripts + visuals", "Transcripts only", "Visuals only").
-- **Collections System & Folder Export**: Added user-managed collections data model in `core.py` with multi-video selection bar ("X selected", "···" batch menu, "Add to Collection"). Added folder-copy export that safely duplicates source footage into designated disk directories.
-- **Preview & Inspector Panel**: Dedicated inspector featuring video player, interactive timeline scrubber, and clean tabbed layout (Transcript with live filter, Frames contact sheet with pagination, and Technical Details).
+- **Preview Action Bar**: Relocated "Open Results" and "Show in Explorer" above the preview video player, joined by a direct "Add to Project" dropdown (defaulting to latest project) and a quick `+` new project button.
+- **Visual Index Inspector Tab**: Dedicated inspector tab displaying all detected objects and scene moments with timestamps, layer badges (`[F]` foreground, `[M]` midground, `[B]` background), confidence percentages, live search filtering, and click-to-seek playback.
+- **Project Selection when Processing Folders**: Integrated project assignment as the top option in `OptionsDialog`, defaulting to the latest project with an instant `+` creation button, automatically routing finished video records into the target project.
+- **Paper Edit "Word Document / Notepad" Feel**: Eliminated rigid card boxes for a fluid, continuous manuscript document layout with clean margin timecodes, inline uppercase speaker badges, and fixed high-contrast "Export script" icon.
+- **Progress Bar & Control Contrast**: Modern `#2563eb` accent chunk with `#ededed` text on `QProgressBar` ensuring 100% readability across all percentages; replaced text "Pause" button with intuitive pause icon.
 
 ---
 

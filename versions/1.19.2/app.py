@@ -123,8 +123,8 @@ QSlider::handle:horizontal { background: #ededed; border: 2px solid #0c0c0c; wid
 QSlider:disabled::groove:horizontal { background: #1e1e1e; }
 QSlider:disabled::sub-page:horizontal { background: #2a2a2a; }
 QSlider:disabled::handle:horizontal { background: #3a3a3a; border-color: #0c0c0c; }
-QProgressBar { background: #1e1e1e; color: #ededed; border: 1px solid #282828; border-radius: 6px; min-height: 18px; text-align: center; font-size: 11px; font-weight: 600; }
-QProgressBar::chunk { background: #ededed; border-radius: 5px; }
+QProgressBar { background: #141414; color: #ededed; border: 1px solid #282828; border-radius: 6px; min-height: 20px; text-align: center; font-size: 11px; font-weight: 600; }
+QProgressBar::chunk { background: #2563eb; border-radius: 5px; }
 QScrollBar:vertical { background: #0c0c0c; width: 8px; }
 QScrollBar::handle:vertical { background: #2a2a2a; min-height: 30px; border-radius: 4px; }
 QScrollBar::handle:vertical:hover { background: #3a3a3a; }
@@ -151,17 +151,21 @@ QWidget#paperPage QLabel#paperTitle { font-family: 'Segoe UI'; font-size: 24px; 
 QWidget#paperPage QLabel#paperEmptyTitle { font-family: 'Segoe UI'; font-size: 18px; font-weight: 600; color: #ededed; }
 QWidget#paperPage QLabel#paperEyebrow { color: #878787; font-size: 10px; font-weight: 600; letter-spacing: 1px; }
 QWidget#paperPage QLabel#paperSubtle { color: #878787; }
-QWidget#paperPage QFrame#paperRail, QWidget#paperPage QFrame#paperCard,
-QWidget#paperPage QWidget#paperSheet { background: #111111; border: 1px solid #282828; }
-QWidget#paperPage QFrame#paperSegment { background: transparent; border: 0; border-bottom: 1px solid #1e1e1e; }
-QWidget#paperPage QFrame#paperSegment[highlighted="true"] { background: #1a1a0a; }
+QWidget#paperPage QFrame#paperRail, QWidget#paperPage QFrame#paperCard { background: #111111; border: 1px solid #282828; }
+QWidget#paperPage QWidget#paperSheet { background: #131313; border: 1px solid #222222; border-radius: 6px; }
+QWidget#paperPage QFrame#paperSegment { background: transparent; border: 0; border-left: 2px solid transparent; border-bottom: 1px dashed #1a1a1a; }
+QWidget#paperPage QFrame#paperSegment:hover { background: #171717; border-left: 2px solid #333333; }
+QWidget#paperPage QFrame#paperSegment[highlighted="true"] { background: #1c1a10; border-left: 2px solid #e2b455; }
 QWidget#paperPage QLineEdit, QWidget#paperPage QTextEdit, QWidget#paperPage QTextBrowser,
 QWidget#paperPage QListWidget { background: #111111; color: #ededed; border: 1px solid #282828; selection-background-color: #1e1e1e; selection-color: #ededed; }
 QWidget#paperPage QLineEdit { padding: 7px 9px; border-radius: 6px; }
-QWidget#paperPage QTextEdit { background: transparent; border: 0; font-family: 'Cascadia Mono', Consolas; font-size: 14px; }
+QWidget#paperPage QFrame#paperSegment QLineEdit { background: transparent; border: 0; padding: 2px 4px; }
+QWidget#paperPage QFrame#paperSegment QTextEdit { background: transparent; border: 0; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.5; color: #e6e6e6; }
+QWidget#paperPage QPushButton#timecodeLink { background: transparent; border: 0; color: #777777; font-family: 'Cascadia Mono', Consolas, monospace; font-size: 11px; text-align: left; padding: 2px 0; }
+QWidget#paperPage QPushButton#timecodeLink:hover { color: #ededed; }
 QWidget#paperPage QPushButton, QWidget#paperPage QToolButton { background: #1a1a1a; color: #ededed; border: 1px solid #2e2e2e; padding: 6px 10px; border-radius: 6px; }
 QWidget#paperPage QPushButton:hover, QWidget#paperPage QToolButton:hover { background: #222222; border-color: #3a3a3a; }
-QWidget#paperPage QPushButton#paperPrimary { background: #ededed; color: #0c0c0c; border-color: #ededed; font-weight: 650; }
+QWidget#paperPage QPushButton#paperPrimary { background: #ededed; color: #0c0c0c; border: 1px solid #ededed; font-weight: 650; }
 QWidget#paperPage QPushButton#paperPrimary:hover { background: #ffffff; }
 QWidget#paperPage QPushButton#paperPrimary:disabled { background: #2a2a2a; color: #5a5a5a; border-color: #2a2a2a; }
 QWidget#paperPage QToolButton:checked { background: #1e1e1e; color: #ededed; border-color: #3a3a3a; }
@@ -1126,6 +1130,32 @@ class OptionsDialog(QDialog):
         main_form.setHorizontalSpacing(16)
         main_form.setVerticalSpacing(7)
 
+        # Project selection row (First option)
+        proj_box = QWidget()
+        proj_box.setObjectName('transparentRow')
+        proj_row = QHBoxLayout(proj_box)
+        proj_row.setContentsMargins(0, 0, 0, 0)
+        proj_row.setSpacing(6)
+
+        self.project_combo = QComboBox()
+        self.project_combo.setStyleSheet(
+            'QComboBox { background: #141414; border: 1px solid #282828; border-radius: 4px; padding: 5px 8px; color: #ededed; }'
+        )
+        self.populate_dialog_projects(parent)
+        proj_row.addWidget(self.project_combo, 1)
+
+        self.btn_dialog_new_project = button('+', self.on_dialog_new_project)
+        self.btn_dialog_new_project.setFixedSize(28, 28)
+        self.btn_dialog_new_project.setStyleSheet(
+            'QPushButton { background: #1a1a1a; border: 1px solid #333333; font-size: 15px; font-weight: bold; border-radius: 4px; padding: 0; color: #ededed; } '
+            'QPushButton:hover { background: #282828; border-color: #555555; }'
+        )
+        self.btn_dialog_new_project.setToolTip('Create a new project')
+        proj_row.addWidget(self.btn_dialog_new_project)
+
+        self.project_title = label('Target project')
+        main_form.addRow(self.project_title, proj_box)
+
         language_box = QWidget()
         language_box.setObjectName('transparentRow')
         language_row = QHBoxLayout(language_box)
@@ -1382,13 +1412,43 @@ class OptionsDialog(QDialog):
         speed = 'Detailed' if seconds <= 5 else ('Balanced' if seconds <= 15 else 'Faster')
         self.visual_interval_label.setText(f'{seconds} sec · {speed}')
 
+    def populate_dialog_projects(self, parent):
+        self.project_combo.blockSignals(True)
+        self.project_combo.clear()
+        self.project_combo.addItem('— None (General Library) —', None)
+        projects = parent.state.get('projects', []) if parent and hasattr(parent, 'state') else []
+        for p in reversed(projects):
+            self.project_combo.addItem(p.get('name', 'Untitled'), p.get('id'))
+        if projects:
+            self.project_combo.setCurrentIndex(1)  # Default to latest project
+        else:
+            self.project_combo.setCurrentIndex(0)
+        self.project_combo.blockSignals(False)
+
+    def on_dialog_new_project(self):
+        name, ok = QInputDialog.getText(self, 'New Project', 'Project name:')
+        name = name.strip()
+        parent = self.parent()
+        if ok and name and parent and hasattr(parent, 'state'):
+            project = dict(id=uuid.uuid4().hex, name=name, created=time.time(), folders=[])
+            parent.state.setdefault('projects', []).append(project)
+            parent.save()
+            self.populate_dialog_projects(parent)
+            idx = self.project_combo.findData(project['id'])
+            if idx >= 0:
+                self.project_combo.setCurrentIndex(idx)
+            if hasattr(parent, 'refresh_collections_sidebar'):
+                parent.refresh_collections_sidebar()
+
     def choose_output(self):
         folder = QFileDialog.getExistingDirectory(self, 'Choose a results location')
         if folder:
             self.output.setText(folder)
 
     def values(self):
-        return {**self.options, 'model': self.model.currentData(),
+        proj_id = self.project_combo.currentData() if hasattr(self, 'project_combo') else None
+        proj_name = self.project_combo.currentText() if proj_id and hasattr(self, 'project_combo') else None
+        vals = {**self.options, 'model': self.model.currentData(),
                 'mode': 'scene' if self.scene_mode.isChecked() else 'interval',
                 'interval': self.interval.value(), 'width': (640, 1280, 1920, 0)[self.width.value()],
                 'quality': self.quality.value(), 'image_format': 'png' if self.png.isChecked() else 'jpeg',
@@ -1397,6 +1457,10 @@ class OptionsDialog(QDialog):
                 'screenshots': self.screenshots.isChecked(), 'transcribe': self.transcribe.isChecked(),
                 'visual_index': self.visual_index.isChecked(), 'visual_interval': self.interval.value(),
                 'skip_existing': not self.redo.isChecked(), 'output': self.output.text()}
+        if proj_id:
+            vals['project_id'] = proj_id
+            vals['project_name'] = proj_name
+        return vals
 
     def update_estimate(self):
         o = self.values()
@@ -1874,6 +1938,42 @@ class ResultsPage(QWidget):
         self.preview_meta.setStyleSheet('color: #878787; font-size: 11px;')
         right_layout.addWidget(self.preview_meta)
 
+        # Action Bar above preview window: Open Results | Show in Explorer | Project assignment
+        action_bar = QHBoxLayout()
+        action_bar.setContentsMargins(0, 2, 0, 4)
+        action_bar.setSpacing(6)
+
+        self.btn_open_results = button('Open Results', self.open_result)
+        self.btn_open_results.setToolTip('Open results folder on disk')
+        self.btn_open_results.setStyleSheet('QPushButton { background: #141414; border: 1px solid #282828; padding: 4px 8px; font-size: 11px; border-radius: 4px; } QPushButton:hover { background: #202020; border-color: #383838; }')
+        action_bar.addWidget(self.btn_open_results)
+
+        self.btn_show_explorer = button('Show in Explorer', self.open_source_file)
+        self.btn_show_explorer.setToolTip('Reveal video file in Explorer')
+        self.btn_show_explorer.setStyleSheet('QPushButton { background: #141414; border: 1px solid #282828; padding: 4px 8px; font-size: 11px; border-radius: 4px; } QPushButton:hover { background: #202020; border-color: #383838; }')
+        action_bar.addWidget(self.btn_show_explorer)
+
+        action_bar.addStretch()
+
+        action_bar.addWidget(label('Project:', 'subtle'))
+        self.preview_project_combo = QComboBox()
+        self.preview_project_combo.setToolTip('Select project to assign this video')
+        self.preview_project_combo.setStyleSheet('QComboBox { background: #141414; border: 1px solid #282828; padding: 3px 6px; font-size: 11px; min-width: 90px; border-radius: 4px; }')
+        action_bar.addWidget(self.preview_project_combo)
+
+        self.btn_add_to_proj = button('+ Add', self.add_current_to_project)
+        self.btn_add_to_proj.setToolTip('Add this video to the selected project')
+        self.btn_add_to_proj.setStyleSheet('QPushButton { background: #1e1e1e; border: 1px solid #333333; padding: 4px 8px; font-size: 11px; font-weight: 600; border-radius: 4px; } QPushButton:hover { background: #282828; border-color: #484848; }')
+        action_bar.addWidget(self.btn_add_to_proj)
+
+        self.btn_new_proj = button('+', self.create_project_and_add_current)
+        self.btn_new_proj.setFixedSize(22, 22)
+        self.btn_new_proj.setToolTip('Create a new project and add this video')
+        self.btn_new_proj.setStyleSheet('QPushButton { background: #1a1a1a; border: 1px solid #333333; font-size: 13px; font-weight: bold; border-radius: 4px; padding: 0; } QPushButton:hover { background: #282828; border-color: #555555; }')
+        action_bar.addWidget(self.btn_new_proj)
+
+        right_layout.addLayout(action_bar)
+
         # Video Player Frame
         player_frame = QFrame()
         player_frame.setObjectName('card')
@@ -1991,7 +2091,42 @@ class ResultsPage(QWidget):
         frames_layout.addWidget(self.frames, 1)
         self.tabs.addTab(frames_tab, 'Frames')
 
-        # Tab 3: Details
+        # Tab 3: Visual Index
+        visual_tab = QWidget()
+        visual_layout = QVBoxLayout(visual_tab)
+        visual_layout.setContentsMargins(0, 10, 0, 0)
+        visual_layout.setSpacing(8)
+
+        visual_nav = QHBoxLayout()
+        self.visual_search = QLineEdit()
+        self.visual_search.setPlaceholderText('Filter detected objects (e.g. person, car, dog)…')
+        self.visual_search.setStyleSheet(
+            'QLineEdit { background: #141414; border: 1px solid #242424; border-radius: 4px; '
+            'padding: 5px 8px; color: #ededed; font-size: 12px; }'
+        )
+        self.visual_search.textChanged.connect(self.fill_visual_index)
+        visual_nav.addWidget(self.visual_search, 1)
+
+        self.visual_label = label('0 moments', 'subtle')
+        self.visual_label.setStyleSheet('color: #878787; font-size: 11px;')
+        visual_nav.addWidget(self.visual_label)
+        visual_layout.addLayout(visual_nav)
+
+        self.visual_list = QTreeWidget()
+        self.visual_list.setHeaderLabels(['Time', 'Detected Objects & Scene', 'Confidence'])
+        self.visual_list.setColumnWidth(0, 75)
+        self.visual_list.setColumnWidth(1, 260)
+        self.visual_list.header().setStretchLastSection(True)
+        self.visual_list.setStyleSheet(
+            'QTreeWidget { background: #0c0c0c; border: 0; outline: none; } '
+            'QTreeWidget::item { padding: 6px 4px; border-bottom: 1px solid #141414; color: #d0d0d0; } '
+            'QTreeWidget::item:selected { background: #1a1a1a; color: #ffffff; }'
+        )
+        self.visual_list.itemClicked.connect(self.seek_visual_moment)
+        visual_layout.addWidget(self.visual_list, 1)
+        self.tabs.addTab(visual_tab, 'Visual Index')
+
+        # Tab 4: Details
         details_tab = QWidget()
         details_layout = QVBoxLayout(details_tab)
         details_layout.setContentsMargins(8, 14, 8, 8)
@@ -1999,10 +2134,6 @@ class ResultsPage(QWidget):
         self.detail_text = QTextBrowser()
         self.detail_text.setStyleSheet('QTextBrowser { background: #0c0c0c; border: 0; color: #a0a0a0; font-size: 12px; }')
         details_layout.addWidget(self.detail_text, 1)
-        open_folder_btn = button('Open Results Folder', self.open_result)
-        details_layout.addWidget(open_folder_btn)
-        show_explorer_btn = button('Show in File Explorer', self.open_source_file)
-        details_layout.addWidget(show_explorer_btn)
         self.tabs.addTab(details_tab, 'Details')
 
         right_layout.addWidget(self.tabs, 1)
@@ -2022,10 +2153,17 @@ class ResultsPage(QWidget):
         self.active_collection_id = collection_id
         if self.window and hasattr(self.window, 'state'):
             coll_name = 'All footage'
-            for c in self.window.state.get('collections', []):
-                if c.get('id') == collection_id:
-                    coll_name = c.get('name', 'Collection')
-                    break
+            if isinstance(collection_id, str) and collection_id.startswith('proj_'):
+                proj_id = collection_id[5:]
+                for p in self.window.state.get('projects', []):
+                    if p.get('id') == proj_id:
+                        coll_name = f"Project: {p.get('name', 'Untitled')}"
+                        break
+            else:
+                for c in self.window.state.get('collections', []):
+                    if c.get('id') == collection_id:
+                        coll_name = c.get('name', 'Collection')
+                        break
             self.breadcrumb.setText(f"{coll_name}  /  Library")
         self.populate()
 
@@ -2178,6 +2316,10 @@ class ResultsPage(QWidget):
 
     def select_record(self, record):
         self.record = record
+        if not record:
+            self.preview_title.setText('No video selected')
+            self.preview_meta.setText('—')
+            return
         name = Path(record.get('source', '')).name
         self.preview_title.setText(name)
         project = record.get('project_name') or 'Library'
@@ -2191,7 +2333,123 @@ class ResultsPage(QWidget):
         self.frame_offset = 0
         self.fill_frames()
         self.fill_transcript()
+        self.fill_visual_index()
         self.fill_details()
+        self.refresh_preview_project_combo()
+
+    def refresh_preview_project_combo(self):
+        if not hasattr(self, 'preview_project_combo'):
+            return
+        self.preview_project_combo.blockSignals(True)
+        self.preview_project_combo.clear()
+        self.preview_project_combo.addItem('— Select Project —', None)
+        projects = self.window.state.get('projects', []) if self.window and hasattr(self.window, 'state') else []
+        for p in reversed(projects):
+            self.preview_project_combo.addItem(p.get('name', 'Untitled'), p.get('id'))
+        if self.record and self.record.get('project_id'):
+            idx = self.preview_project_combo.findData(self.record.get('project_id'))
+            if idx >= 0:
+                self.preview_project_combo.setCurrentIndex(idx)
+        elif projects:
+            self.preview_project_combo.setCurrentIndex(1)  # Default to latest project
+        self.preview_project_combo.blockSignals(False)
+
+    def add_current_to_project(self):
+        if not self.record or not self.window or not hasattr(self.window, 'state'):
+            return
+        proj_id = self.preview_project_combo.currentData()
+        if not proj_id:
+            return
+        project = next((p for p in self.window.state.get('projects', []) if p.get('id') == proj_id), None)
+        if not project:
+            return
+        self.record['project_id'] = project['id']
+        self.record['project_name'] = project['name']
+        source = self.record.get('source', '')
+        folder = next((f for f in project.get('folders', []) if f.get('path') == source), None)
+        if not folder:
+            project.setdefault('folders', []).append({
+                'id': uuid.uuid4().hex,
+                'name': Path(source).name,
+                'path': source,
+                'created': time.time(),
+                'explicit': True,
+                'files': [{'name': Path(source).name, 'path': source, 'duration': self.record.get('duration', 0), 'status': 'Ready', 'error': '', 'selected': True}],
+            })
+        self.window.save()
+        self.preview_meta.setText(f"{project['name']}  ·  {duration_text(self.record.get('duration', 0))}  ·  {source}")
+        self.populate()
+        if hasattr(self.window, 'projects_page'):
+            self.window.projects_page.refresh(project['id'])
+
+    def create_project_and_add_current(self):
+        name, ok = QInputDialog.getText(self, 'New Project', 'Project name:')
+        name = name.strip()
+        if ok and name and self.window and hasattr(self.window, 'state'):
+            project = dict(id=uuid.uuid4().hex, name=name, created=time.time(), folders=[])
+            self.window.state.setdefault('projects', []).append(project)
+            self.window.save()
+            self.refresh_preview_project_combo()
+            idx = self.preview_project_combo.findData(project['id'])
+            if idx >= 0:
+                self.preview_project_combo.setCurrentIndex(idx)
+            self.add_current_to_project()
+            if hasattr(self.window, 'refresh_collections_sidebar'):
+                self.window.refresh_collections_sidebar()
+
+    def seek_visual_moment(self, item, column=0):
+        t = item.data(0, Qt.UserRole)
+        if t is not None:
+            self.player.setPosition(int(float(t) * 1000))
+
+    def fill_visual_index(self):
+        self.visual_list.clear()
+        if not self.record:
+            self.visual_label.setText('0 moments')
+            return
+        vindex = self.record.get('visual_index', {})
+        frames = vindex.get('frames', [])
+        filter_text = self.visual_search.text().strip().casefold()
+
+        count = 0
+        for f in frames:
+            t = float(f.get('time', 0))
+            detections = f.get('detections', [])
+            keywords = f.get('keywords', {})
+            all_labels = [d.get('label', '') for d in detections]
+            if filter_text:
+                haystack = ' '.join(all_labels + f.get('search_words', [])).casefold()
+                if filter_text not in haystack:
+                    continue
+
+            time_str = duration_text(t)
+            det_strs = []
+            for d in detections[:5]:
+                lbl = d.get('label', '')
+                conf = int(float(d.get('confidence', 0)) * 100)
+                layer = d.get('layer', '')
+                tag = f"[{layer[0].upper()}]" if layer else ""
+                det_strs.append(f"{lbl} {tag} {conf}%")
+
+            summary_str = " · ".join(det_strs) if det_strs else "No labels detected"
+            conf_str = f"{len(detections)} obj"
+
+            item = QTreeWidgetItem([time_str, summary_str, conf_str])
+            item.setData(0, Qt.UserRole, t)
+            fg = keywords.get('foreground', [])
+            mg = keywords.get('midground', [])
+            bg = keywords.get('background', [])
+            item.setToolTip(1, f"Foreground: {', '.join(fg) or 'none'}\nMidground: {', '.join(mg) or 'none'}\nBackground: {', '.join(bg) or 'none'}")
+            self.visual_list.addTopLevelItem(item)
+            count += 1
+
+        if not frames:
+            item = QTreeWidgetItem(['', 'No visual index data for this video', ''])
+            item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
+            self.visual_list.addTopLevelItem(item)
+            self.visual_label.setText('Not indexed')
+        else:
+            self.visual_label.setText(f"{count} moment{'s' if count != 1 else ''}")
 
     def update_selection_bar(self):
         count = len(self.checked_ids)
@@ -2616,13 +2874,14 @@ class PaperSegmentRow(QFrame):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
         self.setProperty('highlighted', bool(segment.get('highlighted')))
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 10, 14, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(14, 8, 14, 8)
+        layout.setSpacing(12)
         self.included = QCheckBox()
         self.included.setChecked(segment.get('included', True))
         self.included.setToolTip('Include this passage in the paper sequence and export')
         layout.addWidget(self.included, 0, Qt.AlignTop)
         meta = QVBoxLayout()
+        meta.setSpacing(3)
         timestamp = QPushButton(duration_text(segment.get('start', 0)))
         timestamp.setFlat(True)
         timestamp.setToolTip('Play from this passage')
@@ -2630,27 +2889,29 @@ class PaperSegmentRow(QFrame):
         meta.addWidget(timestamp)
         self.speaker = QLineEdit(segment.get('speaker', ''))
         self.speaker.setPlaceholderText('SPEAKER')
-        timestamp.setFixedWidth(88)
+        timestamp.setFixedWidth(80)
         timestamp.setObjectName('timecodeLink')
-        self.speaker.setMaximumWidth(88)
-        self.speaker.setStyleSheet("font-family: 'Cascadia Mono', Consolas; font-weight: 700; text-transform: uppercase;")
+        self.speaker.setMaximumWidth(80)
+        self.speaker.setStyleSheet("font-family: 'Segoe UI', system-ui; font-size: 11px; font-weight: 700; color: #878787; text-transform: uppercase; background: transparent; border: 0; padding: 0;")
         meta.addWidget(self.speaker)
         meta.addStretch()
         layout.addLayout(meta)
         body = QVBoxLayout()
+        body.setSpacing(4)
         self.text = QTextEdit()
         self.text.setAcceptRichText(False)
         self.text.setPlainText(segment.get('text', ''))
-        self.text.setMinimumHeight(42)
+        self.text.setMinimumHeight(38)
+        self.text.setStyleSheet("background: transparent; border: 0; color: #e6e6e6; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; padding: 0;")
         self.text.document().contentsChanged.connect(self.fit_text)
         body.addWidget(self.text)
         self.note = QLineEdit(segment.get('note', ''))
         self.note.setPlaceholderText('Write a margin note…')
-        self.note.setStyleSheet("color: #e47b61; border: 0; font-family: 'Segoe Print'; font-size: 13px;")
+        self.note.setStyleSheet("color: #e47b61; border: 0; background: transparent; font-family: 'Segoe UI', sans-serif; font-style: italic; font-size: 12px; padding: 0;")
         body.addWidget(self.note)
         layout.addLayout(body, 1)
         self.highlight = QToolButton()
-        self.highlight.setIcon(paper_icon('marker', '#a36b00'))
+        self.highlight.setIcon(paper_icon('marker', '#e2b455'))
         self.highlight.setIconSize(QSize(16, 16))
         self.highlight.setCheckable(True)
         self.highlight.setChecked(segment.get('highlighted', False))
@@ -2692,8 +2953,8 @@ class PaperDocument(QWidget):
         self.document = None
         self.rows = []
         self.layout_box = QVBoxLayout(self)
-        self.layout_box.setContentsMargins(10, 10, 10, 24)
-        self.layout_box.setSpacing(0)
+        self.layout_box.setContentsMargins(24, 20, 24, 28)
+        self.layout_box.setSpacing(2)
         self.ink = InkCanvas(self)
         self.ink.changed.connect(self.changed)
 
@@ -2970,7 +3231,7 @@ class PaperEditPage(QWidget):
         order_button.setToolTip('Reorder selected transcript passages')
         actions.addWidget(order_button)
         self.export_button = button('Export script', self.export_script)
-        self.export_button.setIcon(paper_icon('export'))
+        self.export_button.setIcon(paper_icon('export', '#0c0c0c'))
         self.export_button.setObjectName('paperPrimary')
         actions.addWidget(self.export_button)
         layout.addLayout(actions)
@@ -3307,7 +3568,9 @@ class LegacyProjectsPage(QWidget):
         progress_row.addWidget(self.progress_detail)
         rl.addLayout(progress_row)
         actions = QHBoxLayout()
-        self.pause = button('Pause', self.window.pause_batch)
+        self.pause = button('  Pause', self.window.pause_batch)
+        self.pause.setIcon(tile_icon('pause'))
+        self.pause.setIconSize(QSize(14, 14))
         self.cancel = button('Cancel batch', self.window.cancel_batch)
         self.pause.setEnabled(False)
         self.cancel.setEnabled(False)
@@ -4142,7 +4405,9 @@ class ProjectsPage(LegacyProjectsPage):
         self.processing_box = QWidget()
         processing = QHBoxLayout(self.processing_box)
         processing.setContentsMargins(0, 0, 0, 0)
-        self.pause = button('Pause', self.window.pause_batch)
+        self.pause = button('  Pause', self.window.pause_batch)
+        self.pause.setIcon(tile_icon('pause'))
+        self.pause.setIconSize(QSize(14, 14))
         self.cancel = button('Cancel', self.window.cancel_batch)
         self.process = button('Process', self.window.process_project, True)
         self.pause.setEnabled(False)
@@ -4811,10 +5076,14 @@ class Window(QMainWindow):
         coll_header.setStyleSheet('color: #666666; font-size: 10px; font-weight: 700; letter-spacing: 1px;')
         coll_hdr_layout.addWidget(coll_header)
         coll_hdr_layout.addStretch()
-        new_coll_btn = button('+', self.prompt_new_collection)
-        new_coll_btn.setFixedSize(20, 20)
-        new_coll_btn.setStyleSheet('QPushButton { background: transparent; border: 0; color: #777; font-size: 14px; font-weight: bold; } QPushButton:hover { color: #eee; }')
-        new_coll_btn.setToolTip('Create new collection')
+        new_coll_btn = button('+', self.on_collections_plus_clicked)
+        new_coll_btn.setFixedSize(22, 22)
+        new_coll_btn.setStyleSheet(
+            'QPushButton { background: #1a1a1a; border: 1px solid #333333; border-radius: 4px; '
+            'color: #ededed; font-size: 14px; font-weight: bold; padding: 0; } '
+            'QPushButton:hover { background: #282828; border-color: #555555; color: #ffffff; }'
+        )
+        new_coll_btn.setToolTip('Create new collection or project')
         coll_hdr_layout.addWidget(new_coll_btn)
         side.addLayout(coll_hdr_layout)
 
@@ -4896,6 +5165,16 @@ class Window(QMainWindow):
         if index != 3 and hasattr(self, 'projects_page'):
             self.projects_page.stop_sequence_playback()
 
+    def on_collections_plus_clicked(self):
+        menu = QMenu(self)
+        menu.addAction(tile_icon('collection'), 'New Collection…', self.prompt_new_collection)
+        menu.addAction(tile_icon('projects'), 'New Project…', self.new_project)
+        sender = self.sender()
+        if sender and hasattr(sender, 'mapToGlobal'):
+            menu.exec(sender.mapToGlobal(QPoint(0, sender.height() + 2)))
+        else:
+            self.prompt_new_collection()
+
     def refresh_collections_sidebar(self):
         if not hasattr(self, 'collections_container'):
             return
@@ -4923,6 +5202,28 @@ class Window(QMainWindow):
             btn.customContextMenuRequested.connect(lambda pos, col_id=cid: self.show_collection_context_menu(pos, col_id))
             self.collections_container.addWidget(btn)
             self.collection_buttons[cid] = btn
+
+        # Also list saved projects under Collections so clicking filters footage
+        projects = self.state.get('projects', [])
+        if projects:
+            p_hdr = label('PROJECTS', 'sectionHeader')
+            p_hdr.setStyleSheet('color: #666666; font-size: 9px; font-weight: 700; letter-spacing: 1px; padding-top: 8px; padding-bottom: 2px;')
+            self.collections_container.addWidget(p_hdr)
+            for p in projects:
+                pid = 'proj_' + p.get('id', '')
+                pname = p.get('name', 'Untitled')
+                pbtn = QToolButton()
+                pbtn.setText(f'  {pname}')
+                pbtn.setIcon(tile_icon('projects'))
+                pbtn.setIconSize(QSize(14, 14))
+                pbtn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+                pbtn.setFixedHeight(30)
+                pbtn.setMinimumWidth(156)
+                pbtn.setObjectName('collectionItem')
+                pbtn.setCheckable(True)
+                pbtn.clicked.connect(lambda checked=False, col_id=pid: self.select_collection(col_id))
+                self.collections_container.addWidget(pbtn)
+                self.collection_buttons[pid] = pbtn
 
     def select_collection(self, collection_id):
         for cid, btn in getattr(self, 'collection_buttons', {}).items():
@@ -5068,7 +5369,9 @@ class Window(QMainWindow):
         progress_row.addWidget(self.progress_detail)
         layout.addLayout(progress_row)
         actions = QHBoxLayout()
-        self.pause = button('Pause', self.pause_batch)
+        self.pause = button('  Pause', self.pause_batch)
+        self.pause.setIcon(tile_icon('pause'))
+        self.pause.setIconSize(QSize(14, 14))
         self.cancel = button('Cancel batch', self.cancel_batch)
         self.pause.setEnabled(False)
         self.cancel.setEnabled(False)
@@ -5296,6 +5599,7 @@ class Window(QMainWindow):
         project = dict(id=uuid.uuid4().hex, name=name, created=time.time(), folders=[])
         self.state['projects'].append(project)
         self.projects_page.refresh(project['id'])
+        self.refresh_collections_sidebar()
         self.save()
 
     def rename_project(self):
@@ -5311,6 +5615,7 @@ class Window(QMainWindow):
                     result['project_name'] = name
             self.results.set_records(self.state['results'])
             self.projects_page.refresh(project['id'])
+            self.refresh_collections_sidebar()
             self.save()
 
     def remove_project(self):
@@ -5322,6 +5627,7 @@ class Window(QMainWindow):
         if QMessageBox.question(self, 'Remove project from dashboard', message) == QMessageBox.Yes:
             self.state['projects'].remove(project)
             self.projects_page.refresh()
+            self.refresh_collections_sidebar()
             self.save()
 
     def choose_folders(self, title):
@@ -5754,7 +6060,8 @@ class Window(QMainWindow):
             item_map = self.projects_page.item_map
             status_label = self.projects_page.status
         else:
-            project = None
+            opt_pid = getattr(self, 'batch', None) and getattr(self.batch, 'options', {}).get('project_id')
+            project = next((p for p in self.state['projects'] if p['id'] == opt_pid), None) if opt_pid else None
             folders = self.state['folders']
             item_map = self.item_map
             status_label = self.status
@@ -5791,6 +6098,15 @@ class Window(QMainWindow):
             if project:
                 value['project_id'] = project['id']
                 value['project_name'] = project['name']
+                if not any(f.get('path') == v['path'] for f in project.get('folders', [])):
+                    project.setdefault('folders', []).append({
+                        'id': uuid.uuid4().hex,
+                        'name': v['name'],
+                        'path': v['path'],
+                        'created': time.time(),
+                        'explicit': True,
+                        'files': [copy.deepcopy(v)],
+                    })
             if not any(r['id'] == value['id'] for r in self.state['results']):
                 self.state['results'].append(value)
             v['output'] = value['output']
@@ -5802,13 +6118,17 @@ class Window(QMainWindow):
             status = self.projects_page.status if self.batch_context[0] == 'project' else self.status
             if self.batch.control.running.is_set():
                 self.batch.control.running.clear()
-                self.pause.setText('Resume')
-                self.projects_page.pause.setText('Resume')
+                self.pause.setText('  Resume')
+                self.pause.setIcon(tile_icon('play'))
+                self.projects_page.pause.setText('  Resume')
+                self.projects_page.pause.setIcon(tile_icon('play'))
                 status.setText('Pausing at the next frame or transcript segment…')
             else:
                 self.batch.control.running.set()
-                self.pause.setText('Pause')
-                self.projects_page.pause.setText('Pause')
+                self.pause.setText('  Pause')
+                self.pause.setIcon(tile_icon('pause'))
+                self.projects_page.pause.setText('  Pause')
+                self.projects_page.pause.setIcon(tile_icon('pause'))
                 status.setText('Resuming batch…')
 
     def cancel_batch(self):

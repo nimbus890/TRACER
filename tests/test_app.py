@@ -1,3 +1,4 @@
+import copy
 import os
 from pathlib import Path
 import sys
@@ -173,6 +174,94 @@ class AppInteractionTests(unittest.TestCase):
             self.assertEqual(page.tree.topLevelItemCount(), 1)
         finally:
             page.close()
+
+    def test_results_page_visual_index_tab_and_seeking(self):
+        win = app.QWidget()
+        win.state = {'collections': [], 'projects': []}
+        page = app.ResultsPage(win)
+        try:
+            record_with_vindex = {
+                'id': 'v_ai_1',
+                'source': 'sample_vision.mp4',
+                'duration': 60,
+                'visual_index': {
+                    'frames': [
+                        {
+                            'time': 12.5,
+                            'detections': [
+                                {'label': 'person', 'confidence': 0.92, 'layer': 'foreground'},
+                                {'label': 'car', 'confidence': 0.81, 'layer': 'background'}
+                            ],
+                            'keywords': {'foreground': ['person'], 'midground': [], 'background': ['car']},
+                            'search_words': ['person', 'car']
+                        },
+                        {
+                            'time': 35.0,
+                            'detections': [
+                                {'label': 'dog', 'confidence': 0.88, 'layer': 'midground'}
+                            ],
+                            'keywords': {'foreground': [], 'midground': ['dog'], 'background': []},
+                            'search_words': ['dog']
+                        }
+                    ]
+                }
+            }
+            page.select_record(record_with_vindex)
+            self.assertEqual(page.visual_list.topLevelItemCount(), 2)
+            first_item = page.visual_list.topLevelItem(0)
+            self.assertIn('person', first_item.text(1))
+            self.assertIn('[F]', first_item.text(1))
+
+            # Test seeking
+            self.assertEqual(first_item.data(0, app.Qt.UserRole), 12.5)
+            with patch.object(page.player, 'setPosition') as mock_set_pos:
+                page.seek_visual_moment(first_item)
+                mock_set_pos.assert_called_once_with(12500)
+
+            # Test filter
+            page.visual_search.setText('dog')
+            self.assertEqual(page.visual_list.topLevelItemCount(), 1)
+            page.visual_search.setText('')
+            self.assertEqual(page.visual_list.topLevelItemCount(), 2)
+        finally:
+            page.close()
+
+    def test_results_page_preview_project_assignment(self):
+        state = {
+            'collections': [],
+            'projects': [{'id': 'p1', 'name': 'Docu Series', 'folders': []}]
+        }
+        win = app.QWidget()
+        win.state = state
+        win.save = lambda: None
+        page = app.ResultsPage(win)
+        try:
+            record = {'id': 'vid_x', 'source': 'clip_x.mp4', 'duration': 100}
+            page.select_record(record)
+            self.assertGreaterEqual(page.preview_project_combo.count(), 2)
+            page.preview_project_combo.setCurrentIndex(1)
+            page.add_current_to_project()
+            self.assertEqual(record.get('project_id'), 'p1')
+            self.assertEqual(record.get('project_name'), 'Docu Series')
+        finally:
+            page.close()
+
+    def test_options_dialog_project_assignment(self):
+        state = {
+            'projects': [{'id': 'proj_alpha', 'name': 'Alpha Feature', 'created': 100, 'folders': []}],
+            'settings': copy.deepcopy(core.DEFAULTS)
+        }
+        parent = app.QWidget()
+        parent.state = state
+        parent.centralWidget = lambda: None
+        dialog = app.OptionsDialog(state['settings'], [], parent)
+        try:
+            self.assertEqual(dialog.project_combo.currentText(), 'Alpha Feature')
+            vals = dialog.values()
+            self.assertEqual(vals.get('project_id'), 'proj_alpha')
+            self.assertEqual(vals.get('project_name'), 'Alpha Feature')
+        finally:
+            dialog.close()
 
 
 if __name__ == '__main__':
