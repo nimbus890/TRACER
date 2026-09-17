@@ -1,8 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <rect width="256" height="256" rx="56" fill="#101b24"/>
-  <rect x="40" y="50" width="176" height="126" rx="18" fill="#c86f50"/>
-  <path d="M103 81L155 113L103 145Z" fill="#2a1c17"/>
-  <rect x="55" y="195" width="30" height="11" rx="3" fill="#d78061"/>
-  <rect x="96" y="195" width="60" height="11" rx="3" fill="#d78061"/>
-  <rect x="167" y="195" width="34" height="11" rx="3" fill="#d78061"/>
+  <defs>
+    <mask id="tracer-frame-mask">
+      <rect width="256" height="256" fill="white"/>
+      <!-- Lower-left diagonal entry cut -->
+      <polygon points="15,178 85,131 85,148 27,187" fill="black"/>
+      <!-- Right wall diagonal exit clearance -->
+      <polygon points="148,84 175,64 175,108 148,128" fill="black"/>
+    </mask>
+  </defs>
+
+  <!-- Centered Tracer mark: frame, T-probe, and cyan beacon -->
+  <g transform="translate(128, 128) scale(1.15) translate(-124, -130)">
+    <g fill="none" stroke="#ffffff" stroke-width="9.6" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Outer frame with diagonal entry and exit breaks -->
+      <rect x="28.5" y="64.5" width="132" height="136" rx="20" mask="url(#tracer-frame-mask)"/>
+      <!-- Lower-left trajectory spur pointing into the frame -->
+      <path d="M 28.5 186 L 82 148" mask="url(#tracer-frame-mask)"/>
+      <!-- Central T stem, hairpin loop, and ascending probe ray -->
+      <path d="M 98.5 178 L 98.5 137 A 9 9 0 0 0 89.5 128 L 63 128 A 7.5 7.5 0 0 1 63 113 L 138 113 Q 150 113 159 105 L 197 71.5" stroke-linecap="round"/>
+    </g>
+    <!-- Cyan found-moment beacon -->
+    <circle cx="214.5" cy="63.5" r="9.2" fill="#41e7f6"/>
+  </g>
 </svg>

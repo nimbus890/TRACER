@@ -264,5 +264,125 @@ class AppInteractionTests(unittest.TestCase):
             dialog.close()
 
 
+    def test_results_page_project_bounding_box_and_export_buttons(self):
+        state = {
+            'collections': [],
+            'projects': [{'id': 'p1', 'name': 'Docu Series', 'folders': []}],
+            'results': []
+        }
+        win = app.QWidget()
+        win.state = state
+        win.save = lambda: None
+        page = app.ResultsPage(win)
+        try:
+            # Dropdown and new project (+) button must be in the same bounding box
+            self.assertIs(page.preview_project_combo.parent(), page.project_box)
+            self.assertIs(page.btn_new_proj.parent(), page.project_box)
+            # The add button is separate
+            self.assertIsNot(page.btn_add_to_proj.parent(), page.project_box)
+
+            # Export project and Add media buttons exist
+            self.assertIsNotNone(page.export_project_btn)
+            self.assertIsNotNone(page.add_media_btn)
+
+            # Test shifting from project view to full video library
+            page.set_active_collection('proj_p1')
+            self.assertEqual(page.active_collection_id, 'proj_p1')
+            self.assertEqual(page.page_heading.text(), 'Project: Docu Series')
+            page.on_add_media()
+            self.assertEqual(page.active_collection_id, 'all')
+            self.assertEqual(page.page_heading.text(), 'Your footage')
+        finally:
+            page.close()
+
+    def test_results_page_search_match_navigation_cycling(self):
+        records = [{
+            'id': 'vid_dog',
+            'source': 'park_scene.mp4',
+            'duration': 120,
+            'segments': [{'start': 0, 'end': 10, 'text': 'Intro dialogue'}],
+            'visual_index': {
+                'frames': [
+                    {'time': 2.5, 'detections': [{'label': 'dog', 'confidence': 0.95}], 'search_words': ['dog', 'animal']},
+                    {'time': 5.0, 'detections': [{'label': 'dog', 'confidence': 0.88}], 'search_words': ['dog', 'animal']},
+                    {'time': 8.0, 'detections': [{'label': 'dog', 'confidence': 0.92}], 'search_words': ['dog', 'animal']},
+                ]
+            }
+        }]
+        win = app.QWidget()
+        win.state = {'collections': [], 'projects': [], 'results': records}
+        win.save = lambda: None
+        page = app.ResultsPage(win)
+        try:
+            page.set_records(records)
+            page.scope_filter.setCurrentIndex(2)  # Visuals only
+            page.search.setText('dog')
+
+            self.assertEqual(page.tree.topLevelItemCount(), 1)
+            item = page.tree.topLevelItem(0)
+
+            # 1st click on matching video: jumps to 1st match (2.5s -> 2500ms)
+            page.on_table_item_clicked(item, 1)
+            self.assertEqual(page.seek.value(), 2500)
+            self.assertEqual(page.tabs.currentIndex(), 2)  # Visual Index tab
+            cur_v = page.visual_list.currentItem()
+            self.assertIsNotNone(cur_v)
+            self.assertAlmostEqual(cur_v.data(0, app.Qt.UserRole), 2.5)
+
+            # 2nd click on same video: advances to 2nd match (5.0s -> 5000ms)
+            page.on_table_item_clicked(item, 1)
+            self.assertEqual(page.seek.value(), 5000)
+            cur_v2 = page.visual_list.currentItem()
+            self.assertAlmostEqual(cur_v2.data(0, app.Qt.UserRole), 5.0)
+
+            # 3rd click on same video: advances to 3rd match (8.0s -> 8000ms)
+            page.on_table_item_clicked(item, 1)
+            self.assertEqual(page.seek.value(), 8000)
+            cur_v3 = page.visual_list.currentItem()
+            self.assertAlmostEqual(cur_v3.data(0, app.Qt.UserRole), 8.0)
+
+            # 4th click on same video: cycles back to 1st match (2.5s -> 2500ms)
+            page.on_table_item_clicked(item, 1)
+            self.assertEqual(page.seek.value(), 2500)
+        finally:
+            page.close()
+
+    def test_paper_edit_word_document_layout(self):
+        document = {
+            'id': 'doc1',
+            'title': 'Interview with Director',
+            'source': 'director.mp4',
+            'segments': [
+                {'id': 's1', 'start': 0.0, 'end': 3.0, 'text': 'We started early in the morning.', 'speaker': 'DIRECTOR', 'included': True, 'highlighted': False, 'note': ''},
+                {'id': 's2', 'start': 3.2, 'end': 6.0, 'text': 'The lighting was perfect.', 'speaker': 'DIRECTOR', 'included': True, 'highlighted': True, 'note': 'Key shot'},
+                {'id': 's3', 'start': 6.5, 'end': 9.0, 'text': 'Cut this sentence out.', 'speaker': 'INTERVIEWER', 'included': False, 'highlighted': False, 'note': ''},
+            ],
+            'order': ['s1', 's2', 's3'],
+            'strokes': []
+        }
+        paper_doc = app.PaperDocument()
+        try:
+            paper_doc.set_document(document)
+            self.assertEqual(len(paper_doc.rows), 3)
+
+            # First segment: standard included text
+            row1 = paper_doc.rows[0]
+            self.assertEqual(row1.text.toPlainText(), 'We started early in the morning.')
+            self.assertTrue(row1.included.isChecked())
+
+            # Second segment: highlighted
+            row2 = paper_doc.rows[1]
+            self.assertTrue(row2.highlight.isChecked())
+            self.assertEqual(row2.note.text(), 'Key shot')
+            self.assertIn('rgba(226, 180, 85', row2.text.styleSheet())
+
+            # Third segment: excluded (strikethrough styling)
+            row3 = paper_doc.rows[2]
+            self.assertFalse(row3.included.isChecked())
+            self.assertIn('line-through', row3.text.styleSheet())
+        finally:
+            paper_doc.close()
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -153,16 +153,16 @@ QWidget#paperPage QLabel#paperEyebrow { color: #878787; font-size: 10px; font-we
 QWidget#paperPage QLabel#paperSubtle { color: #878787; }
 QWidget#paperPage QFrame#paperRail, QWidget#paperPage QFrame#paperCard { background: #111111; border: 1px solid #282828; }
 QWidget#paperPage QWidget#paperSheet { background: #131313; border: 1px solid #222222; border-radius: 6px; }
-QWidget#paperPage QFrame#paperSegment { background: transparent; border: 0; border-left: 2px solid transparent; border-bottom: 1px dashed #1a1a1a; }
-QWidget#paperPage QFrame#paperSegment:hover { background: #171717; border-left: 2px solid #333333; }
-QWidget#paperPage QFrame#paperSegment[highlighted="true"] { background: #1c1a10; border-left: 2px solid #e2b455; }
+QWidget#paperPage QFrame#paperSegment { background: transparent; border: 0; border-radius: 4px; margin-bottom: 6px; }
+QWidget#paperPage QFrame#paperSegment:hover { background: #161616; }
+QWidget#paperPage QFrame#paperSegment[highlighted="true"] { background: #1a1810; }
 QWidget#paperPage QLineEdit, QWidget#paperPage QTextEdit, QWidget#paperPage QTextBrowser,
 QWidget#paperPage QListWidget { background: #111111; color: #ededed; border: 1px solid #282828; selection-background-color: #1e1e1e; selection-color: #ededed; }
 QWidget#paperPage QLineEdit { padding: 7px 9px; border-radius: 6px; }
 QWidget#paperPage QFrame#paperSegment QLineEdit { background: transparent; border: 0; padding: 2px 4px; }
-QWidget#paperPage QFrame#paperSegment QTextEdit { background: transparent; border: 0; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.5; color: #e6e6e6; }
+QWidget#paperPage QFrame#paperSegment QTextEdit { background: transparent; border: 0; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: #e4e4e4; }
 QWidget#paperPage QPushButton#timecodeLink { background: transparent; border: 0; color: #777777; font-family: 'Cascadia Mono', Consolas, monospace; font-size: 11px; text-align: left; padding: 2px 0; }
-QWidget#paperPage QPushButton#timecodeLink:hover { color: #ededed; }
+QWidget#paperPage QPushButton#timecodeLink:hover { color: #51c8f9; }
 QWidget#paperPage QPushButton, QWidget#paperPage QToolButton { background: #1a1a1a; color: #ededed; border: 1px solid #2e2e2e; padding: 6px 10px; border-radius: 6px; }
 QWidget#paperPage QPushButton:hover, QWidget#paperPage QToolButton:hover { background: #222222; border-color: #3a3a3a; }
 QWidget#paperPage QPushButton#paperPrimary { background: #ededed; color: #0c0c0c; border: 1px solid #ededed; font-weight: 650; }
@@ -664,18 +664,28 @@ class SearchResultDelegate(QStyledItemDelegate):
         selected = bool(option.state & QStyle.State_Selected)
         painter.save()
         painter.setClipRect(rect)
+
+        origins = data.get('origins', ())
+        origins_width = len(origins) * 26 + 10 if origins else 0
+        text_width = max(60, rect.width() - origins_width)
+
         painter.setPen(QColor('#ffffff') if selected else QColor('#ededed'))
         painter.setFont(QFont('Segoe UI', 10, QFont.DemiBold))
-        painter.drawText(rect.left(), rect.top() + 14, data.get('title', ''))
+        elided_title = painter.fontMetrics().elidedText(data.get('title', ''), Qt.ElideMiddle, text_width)
+        painter.drawText(rect.left(), rect.top() + 14, elided_title)
+
         painter.setPen(QColor('#a0a0a0') if selected else QColor('#878787'))
         painter.setFont(QFont('Segoe UI', 8))
-        painter.drawText(rect.left(), rect.top() + 31, data.get('meta', ''))
+        elided_meta = painter.fontMetrics().elidedText(data.get('meta', ''), Qt.ElideRight, text_width)
+        painter.drawText(rect.left(), rect.top() + 31, elided_meta)
+
         hits = data.get('hits', '')
-        origins = data.get('origins', ())
-        paint_origin_icons(painter, origins, rect.left() + len(origins) * 24, rect.top() + 33, selected)
         if hits:
             painter.setPen(QColor('#f59e0b') if selected else QColor('#d97706'))
-            painter.drawText(rect.left() + len(origins) * 24 + 4, rect.top() + 48, hits)
+            painter.drawText(rect.left(), rect.top() + 48, hits)
+
+        if origins:
+            paint_origin_icons(painter, origins, rect.right() - 2, rect.top() + 14, selected)
         painter.restore()
 
 
@@ -732,17 +742,25 @@ class MediaTableDelegate(QStyledItemDelegate):
             painter.drawText(thumb_rect.left(), thumb_rect.top(), 64, 46, Qt.AlignCenter, 'No thumb')
 
         text_left = thumb_rect.left() + 74
+        origins = data.get('origins', ())
+        origins_width = len(origins) * 26 + 12 if origins else 0
+        available_text_width = max(60, rect.right() - text_left - origins_width)
+
+        title_text = data.get('title', '')
         painter.setPen(QColor('#ffffff') if selected else QColor('#ededed'))
         painter.setFont(QFont('Segoe UI', 9, QFont.DemiBold))
-        painter.drawText(text_left, rect.top() + 19, data.get('title', ''))
+        elided_title = painter.fontMetrics().elidedText(title_text, Qt.ElideMiddle, available_text_width)
+        painter.drawText(text_left, rect.top() + 19, elided_title)
 
+        meta_text = data.get('meta', '')
         painter.setPen(QColor('#888888'))
         painter.setFont(QFont('Segoe UI', 8))
-        painter.drawText(text_left, rect.top() + 37, data.get('meta', ''))
+        elided_meta = painter.fontMetrics().elidedText(meta_text, Qt.ElideRight, available_text_width)
+        painter.drawText(text_left, rect.top() + 37, elided_meta)
 
-        origins = data.get('origins', ())
         if origins:
-            paint_origin_icons(painter, origins, text_left + len(origins) * 20, rect.top() + 26, selected)
+            icon_top = rect.top() + (rect.height() - 20) // 2
+            paint_origin_icons(painter, origins, rect.right() - 4, icon_top, selected)
 
         painter.restore()
 
@@ -1769,6 +1787,8 @@ class ResultsPage(QWidget):
         self.visual_matches = {}
         self.active_collection_id = 'all'
         self.checked_ids = set()
+        self.last_clicked_record_id = None
+        self.current_match_index = 0
 
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
@@ -1789,7 +1809,7 @@ class ResultsPage(QWidget):
         self.breadcrumb.setStyleSheet('color: #878787; font-size: 11px; font-weight: 500;')
         left_layout.addWidget(self.breadcrumb)
 
-        # Header Row: "Your footage" + meta stats + "+ Add media"
+        # Header Row: "Your footage" + meta stats + "Export project" + "+ Add media"
         header_row = QHBoxLayout()
         header_text_col = QVBoxLayout()
         header_text_col.setSpacing(4)
@@ -1802,12 +1822,22 @@ class ResultsPage(QWidget):
         header_row.addLayout(header_text_col)
         header_row.addStretch()
 
+        self.export_project_btn = button('Export project', self.on_export_project)
+        self.export_project_btn.setStyleSheet(
+            'QPushButton { background: #161616; color: #ededed; border: 1px solid #333333; '
+            'border-radius: 6px; padding: 7px 14px; font-weight: 500; font-size: 12px; } '
+            'QPushButton:hover { background: #222222; border-color: #555555; }'
+        )
+        self.export_project_btn.setToolTip('Export project media or files to a folder')
+        header_row.addWidget(self.export_project_btn)
+
         self.add_media_btn = button('+ Add media', self.on_add_media)
         self.add_media_btn.setStyleSheet(
             'QPushButton { background: #161616; color: #ededed; border: 1px solid #333333; '
             'border-radius: 6px; padding: 7px 14px; font-weight: 500; font-size: 12px; } '
             'QPushButton:hover { background: #222222; border-color: #555555; }'
         )
+        self.add_media_btn.setToolTip('Add media or shift to full Video Library')
         header_row.addWidget(self.add_media_btn)
         left_layout.addLayout(header_row)
 
@@ -1956,21 +1986,46 @@ class ResultsPage(QWidget):
         action_bar.addStretch()
 
         action_bar.addWidget(label('Project:', 'subtle'))
+
+        # Combined Bounding Box enclosing Project Dropdown and New Project (+) Button
+        self.project_box = QFrame()
+        self.project_box.setObjectName('projectBoundingBox')
+        self.project_box.setStyleSheet(
+            'QFrame#projectBoundingBox { background: #141414; border: 1px solid #282828; border-radius: 4px; } '
+            'QFrame#projectBoundingBox:hover { border-color: #3a3a3a; }'
+        )
+        pbox_layout = QHBoxLayout(self.project_box)
+        pbox_layout.setContentsMargins(0, 0, 0, 0)
+        pbox_layout.setSpacing(0)
+
         self.preview_project_combo = QComboBox()
         self.preview_project_combo.setToolTip('Select project to assign this video')
-        self.preview_project_combo.setStyleSheet('QComboBox { background: #141414; border: 1px solid #282828; padding: 3px 6px; font-size: 11px; min-width: 90px; border-radius: 4px; }')
-        action_bar.addWidget(self.preview_project_combo)
-
-        self.btn_add_to_proj = button('+ Add', self.add_current_to_project)
-        self.btn_add_to_proj.setToolTip('Add this video to the selected project')
-        self.btn_add_to_proj.setStyleSheet('QPushButton { background: #1e1e1e; border: 1px solid #333333; padding: 4px 8px; font-size: 11px; font-weight: 600; border-radius: 4px; } QPushButton:hover { background: #282828; border-color: #484848; }')
-        action_bar.addWidget(self.btn_add_to_proj)
+        self.preview_project_combo.setStyleSheet(
+            'QComboBox { background: transparent; border: 0; padding: 3px 6px; font-size: 11px; min-width: 95px; color: #ededed; } '
+            'QComboBox::drop-down { border: 0; width: 16px; }'
+        )
+        self.preview_project_combo.activated.connect(self._on_preview_project_activated)
+        pbox_layout.addWidget(self.preview_project_combo, 1)
 
         self.btn_new_proj = button('+', self.create_project_and_add_current)
         self.btn_new_proj.setFixedSize(22, 22)
         self.btn_new_proj.setToolTip('Create a new project and add this video')
-        self.btn_new_proj.setStyleSheet('QPushButton { background: #1a1a1a; border: 1px solid #333333; font-size: 13px; font-weight: bold; border-radius: 4px; padding: 0; } QPushButton:hover { background: #282828; border-color: #555555; }')
-        action_bar.addWidget(self.btn_new_proj)
+        self.btn_new_proj.setStyleSheet(
+            'QPushButton { background: transparent; border: 0; border-left: 1px solid #242424; '
+            'font-size: 13px; font-weight: bold; color: #878787; border-top-right-radius: 4px; border-bottom-right-radius: 4px; padding: 0; } '
+            'QPushButton:hover { background: #222222; color: #ededed; }'
+        )
+        pbox_layout.addWidget(self.btn_new_proj)
+        action_bar.addWidget(self.project_box)
+
+        self.btn_add_to_proj = button('+ Add', self.add_current_to_project)
+        self.btn_add_to_proj.setToolTip('Add this video to the selected project')
+        self.btn_add_to_proj.setStyleSheet(
+            'QPushButton { background: #1e1e1e; border: 1px solid #333333; padding: 4px 8px; '
+            'font-size: 11px; font-weight: 600; border-radius: 4px; } '
+            'QPushButton:hover { background: #282828; border-color: #484848; }'
+        )
+        action_bar.addWidget(self.btn_add_to_proj)
 
         right_layout.addLayout(action_bar)
 
@@ -2013,7 +2068,7 @@ class ResultsPage(QWidget):
         self.seek = MarkedSlider(Qt.Horizontal)
         self.seek.sliderMoved.connect(self.player.setPosition)
         self.player.positionChanged.connect(self.position)
-        self.player.durationChanged.connect(lambda n: self.seek.setRange(0, n))
+        self.player.durationChanged.connect(lambda n: self.seek.setRange(0, n) if n > 0 else None)
         self.player.playbackStateChanged.connect(self.sync_play_icon)
         control_layout.addWidget(self.seek, 1)
 
@@ -2153,11 +2208,13 @@ class ResultsPage(QWidget):
         self.active_collection_id = collection_id
         if self.window and hasattr(self.window, 'state'):
             coll_name = 'All footage'
+            is_proj = False
             if isinstance(collection_id, str) and collection_id.startswith('proj_'):
                 proj_id = collection_id[5:]
                 for p in self.window.state.get('projects', []):
                     if p.get('id') == proj_id:
                         coll_name = f"Project: {p.get('name', 'Untitled')}"
+                        is_proj = True
                         break
             else:
                 for c in self.window.state.get('collections', []):
@@ -2165,6 +2222,14 @@ class ResultsPage(QWidget):
                         coll_name = c.get('name', 'Collection')
                         break
             self.breadcrumb.setText(f"{coll_name}  /  Library")
+            if is_proj or collection_id != 'all':
+                self.page_heading.setText(coll_name)
+                self.add_media_btn.setText('← Video Library')
+                self.add_media_btn.setToolTip('Shift back to full Video Library')
+            else:
+                self.page_heading.setText('Your footage')
+                self.add_media_btn.setText('+ Add media')
+                self.add_media_btn.setToolTip('Import new media into Library')
         self.populate()
 
     def set_records(self, records):
@@ -2172,8 +2237,48 @@ class ResultsPage(QWidget):
         self.populate()
 
     def on_add_media(self):
+        if self.active_collection_id != 'all':
+            self.set_active_collection('all')
+            if self.window and hasattr(self.window, 'collection_buttons'):
+                for cid, btn in getattr(self.window, 'collection_buttons', {}).items():
+                    btn.setChecked(False)
+            return
         if self.window and hasattr(self.window, 'add_media'):
             self.window.add_media()
+
+    def on_export_project(self):
+        proj_id = None
+        proj_name = 'Project'
+        if isinstance(self.active_collection_id, str) and self.active_collection_id.startswith('proj_'):
+            proj_id = self.active_collection_id[5:]
+            for p in self.window.state.get('projects', []):
+                if p.get('id') == proj_id:
+                    proj_name = p.get('name', 'Project')
+                    break
+        elif self.record and self.record.get('project_id'):
+            proj_id = self.record.get('project_id')
+            proj_name = self.record.get('project_name', 'Project')
+        elif self.window and hasattr(self.window, 'state') and self.window.state.get('projects'):
+            projects = self.window.state['projects']
+            if len(projects) == 1:
+                proj_id = projects[0]['id']
+                proj_name = projects[0]['name']
+            elif projects:
+                names = [p.get('name', 'Untitled') for p in projects]
+                chosen, ok = QInputDialog.getItem(self, 'Export Project', 'Select project to export:', names, 0, False)
+                if ok and chosen:
+                    p = next((p for p in projects if p.get('name') == chosen), None)
+                    if p:
+                        proj_id = p.get('id')
+                        proj_name = p.get('name')
+        if not proj_id:
+            QMessageBox.information(self, 'Export Project', 'No project selected to export. Assign videos to a project first.')
+            return
+
+        dest = QFileDialog.getExistingDirectory(self, f"Export '{proj_name}' Files")
+        if dest:
+            copied, skipped, errors = core.export_collection(self.window.state, f'proj_{proj_id}', dest)
+            QMessageBox.information(self, 'Export Complete', f"Exported {copied} video{'s' if copied != 1 else ''} to:\n{dest}")
 
     def matching_visual_frames(self, record, query=None):
         query = (self.search.text() if query is None else query).casefold().strip()
@@ -2192,6 +2297,8 @@ class ResultsPage(QWidget):
         query = self.search.text().casefold().strip()
         scope = self.scope_filter.currentData()
         self.visual_matches = {}
+        self.last_clicked_record_id = None
+        self.current_match_index = 0
 
         allowed_ids = None
         if self.window and hasattr(self.window, 'state'):
@@ -2306,13 +2413,87 @@ class ResultsPage(QWidget):
             rec = item.data(1, Qt.UserRole)
             if rec:
                 self.show_row_menu(rec)
+        else:
+            rec = item.data(1, Qt.UserRole)
+            if rec:
+                if self.record != rec:
+                    self.select_record(rec)
+                rec_id = rec.get('id')
+                query = self.search.text().strip().casefold()
+                if query:
+                    if self.last_clicked_record_id == rec_id:
+                        self.navigate_search_match(rec, advance=True)
+                    else:
+                        self.navigate_search_match(rec, advance=False)
 
     def on_table_selection(self, current, previous):
         if not current:
             return
         rec = current.data(1, Qt.UserRole)
-        if rec:
+        if rec and self.record != rec:
             self.select_record(rec)
+
+    def navigate_search_match(self, record, advance=False):
+        query = self.search.text().strip().casefold()
+        scope = self.scope_filter.currentData()
+        if not query or not record:
+            return
+
+        rec_id = record.get('id')
+        if advance and rec_id == self.last_clicked_record_id:
+            self.current_match_index += 1
+        else:
+            self.last_clicked_record_id = rec_id
+            self.current_match_index = 0
+        visual_matches = self.matching_visual_frames(record, query)
+        transcript_matches = ([s for s in record.get('segments', []) if query in s.get('text', '').casefold()]
+                              if scope in ('all', 'audio') else [])
+
+        if scope == 'visual' or (visual_matches and scope != 'audio'):
+            if not visual_matches:
+                return
+            count = len(visual_matches)
+            idx = self.current_match_index % count
+            frame = visual_matches[idx]
+            t = float(frame.get('time', 0))
+            ms = round(t * 1000)
+            self.player.setPosition(ms)
+            self.seek.setValue(ms)
+            self.clock.setText(duration_text(t))
+            self.tabs.setCurrentIndex(2)  # Visual Index tab
+
+            # Highlight and scroll to matching item in visual_list
+            best_item = None
+            min_diff = 999999.0
+            for i in range(self.visual_list.topLevelItemCount()):
+                v_item = self.visual_list.topLevelItem(i)
+                item_t = v_item.data(0, Qt.UserRole)
+                if item_t is not None:
+                    diff = abs(float(item_t) - t)
+                    if diff < min_diff:
+                        min_diff = diff
+                        best_item = v_item
+            if best_item:
+                self.visual_list.setCurrentItem(best_item)
+                self.visual_list.scrollToItem(best_item, QAbstractItemView.PositionAtCenter)
+        elif transcript_matches:
+            count = len(transcript_matches)
+            idx = self.current_match_index % count
+            seg = transcript_matches[idx]
+            t = float(seg.get('start', 0))
+            ms = round(t * 1000)
+            self.player.setPosition(ms)
+            self.seek.setValue(ms)
+            self.clock.setText(duration_text(t))
+            self.tabs.setCurrentIndex(0)  # Transcript tab
+
+            for i in range(self.transcript.count()):
+                t_item = self.transcript.item(i)
+                seg_data = t_item.data(Qt.UserRole)
+                if seg_data and abs(float(seg_data.get('start', 0)) - t) < 0.05:
+                    self.transcript.setCurrentItem(t_item)
+                    self.transcript.scrollToItem(t_item, QAbstractItemView.PositionAtCenter)
+                    break
 
     def select_record(self, record):
         self.record = record
@@ -2324,6 +2505,9 @@ class ResultsPage(QWidget):
         self.preview_title.setText(name)
         project = record.get('project_name') or 'Library'
         self.preview_meta.setText(f"{project}  ·  {duration_text(record.get('duration', 0))}  ·  {record.get('source', '')}")
+        dur_ms = round(float(record.get('duration', 0) or 0) * 1000)
+        if dur_ms > 0:
+            self.seek.setRange(0, dur_ms)
 
         source_url = QUrl.fromLocalFile(record['source'])
         if self.player.source() != source_url:
@@ -2346,6 +2530,7 @@ class ResultsPage(QWidget):
         projects = self.window.state.get('projects', []) if self.window and hasattr(self.window, 'state') else []
         for p in reversed(projects):
             self.preview_project_combo.addItem(p.get('name', 'Untitled'), p.get('id'))
+        self.preview_project_combo.addItem('+ New Project…', '__new_project__')
         if self.record and self.record.get('project_id'):
             idx = self.preview_project_combo.findData(self.record.get('project_id'))
             if idx >= 0:
@@ -2354,11 +2539,16 @@ class ResultsPage(QWidget):
             self.preview_project_combo.setCurrentIndex(1)  # Default to latest project
         self.preview_project_combo.blockSignals(False)
 
+    def _on_preview_project_activated(self, index):
+        data = self.preview_project_combo.currentData()
+        if data == '__new_project__':
+            self.create_project_and_add_current()
+
     def add_current_to_project(self):
         if not self.record or not self.window or not hasattr(self.window, 'state'):
             return
         proj_id = self.preview_project_combo.currentData()
-        if not proj_id:
+        if not proj_id or proj_id == '__new_project__':
             return
         project = next((p for p in self.window.state.get('projects', []) if p.get('id') == proj_id), None)
         if not project:
@@ -2400,7 +2590,10 @@ class ResultsPage(QWidget):
     def seek_visual_moment(self, item, column=0):
         t = item.data(0, Qt.UserRole)
         if t is not None:
-            self.player.setPosition(int(float(t) * 1000))
+            ms = int(float(t) * 1000)
+            self.player.setPosition(ms)
+            self.seek.setValue(ms)
+            self.clock.setText(duration_text(float(t)))
 
     def fill_visual_index(self):
         self.visual_list.clear()
@@ -2436,6 +2629,14 @@ class ResultsPage(QWidget):
 
             item = QTreeWidgetItem([time_str, summary_str, conf_str])
             item.setData(0, Qt.UserRole, t)
+            main_q = self.search.text().strip().casefold()
+            is_match = bool(main_q and main_q in ' '.join(all_labels + f.get('search_words', [])).casefold())
+            if is_match:
+                item.setForeground(0, QColor('#f59e0b'))
+                item.setForeground(1, QColor('#ededed'))
+                item.setBackground(0, QBrush(QColor('#2d1f08')))
+                item.setBackground(1, QBrush(QColor('#2d1f08')))
+                item.setBackground(2, QBrush(QColor('#2d1f08')))
             fg = keywords.get('foreground', [])
             mg = keywords.get('midground', [])
             bg = keywords.get('background', [])
@@ -2867,67 +3068,131 @@ class PaperSegmentRow(QFrame):
     changed = Signal()
     seekRequested = Signal(float)
 
-    def __init__(self, segment, parent=None):
+    def __init__(self, segment, parent=None, show_speaker=True):
         super().__init__(parent)
         self.segment = segment
         self.setObjectName('paperSegment')
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
         self.setProperty('highlighted', bool(segment.get('highlighted')))
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 8, 14, 8)
-        layout.setSpacing(12)
+        self.setProperty('included', bool(segment.get('included', True)))
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(16, 3, 16, 5)
+        root.setSpacing(2)
+
+        # Header Bar: Speaker + Timecode + Actions
+        header_bar = QHBoxLayout()
+        header_bar.setContentsMargins(0, 0, 0, 0)
+        header_bar.setSpacing(8)
+
+        speaker_val = segment.get('speaker', '')
+        self.speaker = QLineEdit(speaker_val)
+        self.speaker.setPlaceholderText('SPEAKER' if (show_speaker or speaker_val) else '')
+        self.speaker.setMaximumWidth(160)
+        self.speaker.setStyleSheet(
+            "font-family: 'Segoe UI', system-ui; font-size: 11px; font-weight: 700; "
+            "color: #9ab4c7; text-transform: uppercase; letter-spacing: 0.5px; "
+            "background: transparent; border: 0; padding: 0;"
+        )
+        if not show_speaker and not speaker_val:
+            self.speaker.hide()
+        header_bar.addWidget(self.speaker)
+
+        self.timecode_btn = QPushButton(duration_text(segment.get('start', 0)))
+        self.timecode_btn.setFlat(True)
+        self.timecode_btn.setObjectName('timecodeLink')
+        self.timecode_btn.setToolTip('Jump to this moment in preview')
+        self.timecode_btn.clicked.connect(lambda: self.seekRequested.emit(float(segment.get('start', 0))))
+        header_bar.addWidget(self.timecode_btn)
+
+        header_bar.addStretch()
+
+        self.highlight = QToolButton()
+        self.highlight.setIcon(paper_icon('marker', '#e2b455'))
+        self.highlight.setIconSize(QSize(13, 13))
+        self.highlight.setCheckable(True)
+        self.highlight.setChecked(segment.get('highlighted', False))
+        self.highlight.setToolTip('Highlight passage')
+        self.highlight.setStyleSheet(
+            'QToolButton { background: transparent; border: 0; padding: 2px 4px; border-radius: 3px; } '
+            'QToolButton:hover { background: #222222; } '
+            'QToolButton:checked { background: #3d3215; border: 1px solid #e2b455; }'
+        )
+        header_bar.addWidget(self.highlight)
+
         self.included = QCheckBox()
         self.included.setChecked(segment.get('included', True))
-        self.included.setToolTip('Include this passage in the paper sequence and export')
-        layout.addWidget(self.included, 0, Qt.AlignTop)
-        meta = QVBoxLayout()
-        meta.setSpacing(3)
-        timestamp = QPushButton(duration_text(segment.get('start', 0)))
-        timestamp.setFlat(True)
-        timestamp.setToolTip('Play from this passage')
-        timestamp.clicked.connect(lambda: self.seekRequested.emit(float(segment.get('start', 0))))
-        meta.addWidget(timestamp)
-        self.speaker = QLineEdit(segment.get('speaker', ''))
-        self.speaker.setPlaceholderText('SPEAKER')
-        timestamp.setFixedWidth(80)
-        timestamp.setObjectName('timecodeLink')
-        self.speaker.setMaximumWidth(80)
-        self.speaker.setStyleSheet("font-family: 'Segoe UI', system-ui; font-size: 11px; font-weight: 700; color: #878787; text-transform: uppercase; background: transparent; border: 0; padding: 0;")
-        meta.addWidget(self.speaker)
-        meta.addStretch()
-        layout.addLayout(meta)
-        body = QVBoxLayout()
-        body.setSpacing(4)
+        self.included.setToolTip('Include passage in script (uncheck to strike through)')
+        self.included.setStyleSheet('QCheckBox { background: transparent; spacing: 4px; font-size: 11px; color: #777777; }')
+        header_bar.addWidget(self.included)
+        root.addLayout(header_bar)
+
+        # Manuscript Text
         self.text = QTextEdit()
         self.text.setAcceptRichText(False)
         self.text.setPlainText(segment.get('text', ''))
-        self.text.setMinimumHeight(38)
-        self.text.setStyleSheet("background: transparent; border: 0; color: #e6e6e6; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; padding: 0;")
+        self.text.setMinimumHeight(28)
         self.text.document().contentsChanged.connect(self.fit_text)
-        body.addWidget(self.text)
+        root.addWidget(self.text)
+
+        # Margin Note / Comment
         self.note = QLineEdit(segment.get('note', ''))
-        self.note.setPlaceholderText('Write a margin note…')
-        self.note.setStyleSheet("color: #e47b61; border: 0; background: transparent; font-family: 'Segoe UI', sans-serif; font-style: italic; font-size: 12px; padding: 0;")
-        body.addWidget(self.note)
-        layout.addLayout(body, 1)
-        self.highlight = QToolButton()
-        self.highlight.setIcon(paper_icon('marker', '#e2b455'))
-        self.highlight.setIconSize(QSize(16, 16))
-        self.highlight.setCheckable(True)
-        self.highlight.setChecked(segment.get('highlighted', False))
-        self.highlight.setToolTip('Mark as a key line')
-        layout.addWidget(self.highlight, 0, Qt.AlignTop)
+        self.note.setPlaceholderText('Add margin note…')
+        root.addWidget(self.note)
+
+        # Wire signals
         self.included.toggled.connect(self.sync)
         self.speaker.textChanged.connect(self.sync)
         self.text.textChanged.connect(self.sync)
         self.note.textChanged.connect(self.sync)
         self.highlight.toggled.connect(self.sync)
+
+        self.update_doc_style()
         QTimer.singleShot(0, self.fit_text)
+
+    def update_doc_style(self):
+        is_inc = self.included.isChecked()
+        is_hl = self.highlight.isChecked()
+        has_note = bool(self.note.text().strip())
+
+        self.setProperty('highlighted', is_hl)
+        self.setProperty('included', is_inc)
+
+        if not is_inc:
+            self.text.setStyleSheet(
+                "background: transparent; border: 0; color: #555555; "
+                "text-decoration: line-through; font-family: 'Segoe UI', serif; "
+                "font-size: 14px; line-height: 1.6; padding: 2px 0;"
+            )
+        elif is_hl:
+            self.text.setStyleSheet(
+                "background: rgba(226, 180, 85, 0.16); border-left: 3px solid #e2b455; "
+                "border-radius: 3px; color: #f5f5f5; font-family: 'Segoe UI', serif; "
+                "font-size: 14px; line-height: 1.6; padding: 4px 8px;"
+            )
+        else:
+            self.text.setStyleSheet(
+                "background: transparent; border: 0; color: #e4e4e4; "
+                "font-family: 'Segoe UI', serif; font-size: 14px; "
+                "line-height: 1.6; padding: 2px 0;"
+            )
+
+        if has_note:
+            self.note.setStyleSheet(
+                "background: rgba(228, 123, 97, 0.08); border-left: 2px solid #e47b61; "
+                "color: #e47b61; font-family: 'Segoe UI', sans-serif; font-style: italic; "
+                "font-size: 11px; padding: 3px 8px; border-radius: 2px;"
+            )
+        else:
+            self.note.setStyleSheet(
+                "background: transparent; border: 0; color: #555555; "
+                "font-family: 'Segoe UI', sans-serif; font-style: italic; font-size: 11px; padding: 1px 4px;"
+            )
 
     def fit_text(self):
         self.text.document().setTextWidth(max(100, self.text.viewport().width()))
-        height = math.ceil(self.text.document().size().height()) + 14
-        self.text.setFixedHeight(max(42, min(300, height)))
+        height = math.ceil(self.text.document().size().height()) + 10
+        self.text.setFixedHeight(max(30, min(300, height)))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -2937,7 +3202,9 @@ class PaperSegmentRow(QFrame):
         self.segment.update(included=self.included.isChecked(), speaker=self.speaker.text().strip(),
                             text=self.text.toPlainText(), note=self.note.text(),
                             highlighted=self.highlight.isChecked())
-        self.setProperty('highlighted', self.highlight.isChecked())
+        if self.speaker.text().strip():
+            self.speaker.show()
+        self.update_doc_style()
         self.style().unpolish(self)
         self.style().polish(self)
         self.changed.emit()
@@ -2953,8 +3220,8 @@ class PaperDocument(QWidget):
         self.document = None
         self.rows = []
         self.layout_box = QVBoxLayout(self)
-        self.layout_box.setContentsMargins(24, 20, 24, 28)
-        self.layout_box.setSpacing(2)
+        self.layout_box.setContentsMargins(36, 24, 36, 32)
+        self.layout_box.setSpacing(4)
         self.ink = InkCanvas(self)
         self.ink.changed.connect(self.changed)
 
@@ -2972,12 +3239,37 @@ class PaperDocument(QWidget):
                 widget.deleteLater()
         self.rows = []
         if document:
+            # Clean Word document header
+            doc_header = QWidget()
+            dh_layout = QVBoxLayout(doc_header)
+            dh_layout.setContentsMargins(14, 6, 14, 12)
+            dh_layout.setSpacing(3)
+            doc_title = label(document.get('title', 'Transcript Document'), 'title')
+            doc_title.setStyleSheet("font-family: 'Segoe UI', system-ui; font-size: 20px; font-weight: 700; color: #ededed;")
+            dh_layout.addWidget(doc_title)
+            analysis = paper_edit.transcript_analysis(document)
+            duration_str = duration_text(analysis.get('duration', 0))
+            words_str = f"{analysis.get('words', 0)} words"
+            speakers_str = f"{analysis.get('speakers', 0)} speaker{'s' if analysis.get('speakers') != 1 else ''}"
+            meta_label = label(f"Transcript Manuscript  ·  {words_str}  ·  {speakers_str}  ·  {duration_str}", 'subtle')
+            meta_label.setStyleSheet("font-size: 11px; color: #777777;")
+            dh_layout.addWidget(meta_label)
+            divider = QFrame()
+            divider.setFrameShape(QFrame.HLine)
+            divider.setStyleSheet("border: 0; border-top: 1px solid #222222; margin-top: 4px; margin-bottom: 6px;")
+            dh_layout.addWidget(divider)
+            self.layout_box.addWidget(doc_header)
+
+            prev_speaker = None
             for segment in document.get('segments', []):
-                row = PaperSegmentRow(segment)
+                cur_speaker = segment.get('speaker', '').strip()
+                show_speaker = bool(cur_speaker and cur_speaker != prev_speaker) or (not prev_speaker and not cur_speaker)
+                row = PaperSegmentRow(segment, show_speaker=show_speaker)
                 row.changed.connect(self.changed)
                 row.seekRequested.connect(self.seekRequested)
                 self.rows.append(row)
                 self.layout_box.addWidget(row)
+                prev_speaker = cur_speaker
         else:
             self.layout_box.addStretch()
             empty_title = label('Start with a transcript', 'paperEmptyTitle')
@@ -4310,6 +4602,12 @@ class ProjectsPage(LegacyProjectsPage):
         layout = QVBoxLayout(card)
         layout.setContentsMargins(48, 48, 48, 48)
         layout.addStretch()
+        logo_label = QLabel()
+        logo_label.setAlignment(Qt.AlignCenter)
+        asset = Path(getattr(sys, '_MEIPASS', core.ROOT)) / 'assets' / 'transpro.svg'
+        logo_label.setPixmap(QIcon(str(asset)).pixmap(48, 48))
+        layout.addWidget(logo_label)
+        layout.addSpacing(6)
         self.empty_title = label('Build your first sequence', 'title')
         self.empty_title.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.empty_title)
@@ -5037,9 +5335,11 @@ class Window(QMainWindow):
         mark = QLabel()
         asset = Path(getattr(sys, '_MEIPASS', core.ROOT)) / 'assets' / 'transpro.svg'
         mark.setPixmap(QIcon(str(asset)).pixmap(20, 20))
+        mark.setToolTip("Tracer — Find what's inside")
         brand.addWidget(mark)
         brand_name = label('TRACER', 'brand')
         brand_name.setStyleSheet('font-size: 13px; font-weight: 700; letter-spacing: 2.5px; color: #ededed;')
+        brand_name.setToolTip("Tracer — Find what's inside")
         brand.addWidget(brand_name)
         brand.addStretch()
         side.addLayout(brand)
@@ -5463,10 +5763,26 @@ class Window(QMainWindow):
         about = QFrame()
         about.setObjectName('card')
         about_layout = QVBoxLayout(about)
-        about_layout.setContentsMargins(19, 15, 19, 15)
-        about_layout.setSpacing(5)
-        about_layout.addWidget(label('Tracer · ' + core.APP_VERSION.rsplit('.', 1)[0], 'eyebrow'))
-        about_layout.addWidget(label('Find the shot. Build the cut.'))
+        about_layout.setContentsMargins(20, 18, 20, 18)
+        about_layout.setSpacing(10)
+        about_header = QHBoxLayout()
+        about_header.setSpacing(14)
+        about_logo = QLabel()
+        about_asset = Path(getattr(sys, '_MEIPASS', core.ROOT)) / 'assets' / 'transpro.svg'
+        about_logo.setPixmap(QIcon(str(about_asset)).pixmap(40, 40))
+        about_header.addWidget(about_logo)
+        about_text = QVBoxLayout()
+        about_text.setSpacing(2)
+        about_title = label('TRACER', 'brand')
+        about_title.setStyleSheet('font-size: 15px; font-weight: 700; letter-spacing: 3px; color: #ededed;')
+        about_tagline = label("FIND WHAT'S INSIDE", 'subtle')
+        about_tagline.setStyleSheet('font-size: 10px; font-weight: 600; letter-spacing: 2px; color: #82929e;')
+        about_text.addWidget(about_title)
+        about_text.addWidget(about_tagline)
+        about_header.addLayout(about_text)
+        about_header.addStretch()
+        about_header.addWidget(label('v' + core.APP_VERSION.rsplit('.', 1)[0], 'eyebrow'))
+        about_layout.addLayout(about_header)
         about_copy = label(
             'Turns folders into searchable material, and searchable material into something resembling a story.\n'
             'Less hunting. More cutting. Fewer files named FINAL_final_v7_use-this-one.', 'subtle')
@@ -6224,8 +6540,10 @@ def main():
     app = QApplication(sys.argv)
     configure_fonts()
     app.setApplicationName('Tracer')
-    app.setOrganizationName('Tracer')
-    app.setWindowIcon(QIcon(str(Path(getattr(sys, '_MEIPASS', core.ROOT)) / 'assets' / 'transpro.svg')))
+    icon_asset = Path(getattr(sys, '_MEIPASS', core.ROOT)) / 'assets' / 'transpro.ico'
+    if not icon_asset.exists():
+        icon_asset = Path(getattr(sys, '_MEIPASS', core.ROOT)) / 'assets' / 'transpro.svg'
+    app.setWindowIcon(QIcon(str(icon_asset)))
     lock = QLockFile(str(core.DATA / 'app.lock'))
     if not lock.tryLock(0):
         QMessageBox.information(None, 'Tracer is open', 'Tracer is already running. Switch to its existing window.')
