@@ -16,14 +16,15 @@ import uuid
 from PySide6.QtCore import (Qt, QThread, Signal, QTimer, QUrl, QSize, QPoint, QLockFile, QEvent,
                             QPropertyAnimation, QEasingCurve, Property)
 from PySide6.QtGui import (QColor, QDesktopServices, QFont, QFontDatabase, QIcon, QPixmap, QImage,
-                           QPainter, QPen, QBrush, QKeySequence, QShortcut, QTextCharFormat, QTextCursor, QTextDocument)
+                           QPainter, QPen, QBrush, QKeySequence, QShortcut, QTextCharFormat, QTextCursor, QTextDocument,
+                           QPainterPath)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QHeaderView, QAbstractItemView,
     QStackedWidget, QFileDialog, QMessageBox, QDialog, QFormLayout, QComboBox,
     QCheckBox, QDoubleSpinBox, QSlider, QSpinBox, QLineEdit, QProgressBar,
     QSplitter, QListWidget, QListWidgetItem, QTextBrowser, QTextEdit, QFrame, QScrollArea,
     QInputDialog, QButtonGroup, QToolButton, QToolTip, QMenu, QGraphicsBlurEffect,
-    QStyledItemDelegate, QStyle, QStyleOptionViewItem, QSizePolicy)
+    QStyledItemDelegate, QStyle, QStyleOptionViewItem, QSizePolicy, QTabWidget)
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 
@@ -48,175 +49,144 @@ def enable_high_dpi():
 
 
 STYLE = '''
-QWidget { background: #151515; color: #e8e3da; font-family: 'Segoe UI'; font-size: 13px; }
-QDialog#processDialog { background: #171716; border: 1px solid #4c4842; border-radius: 8px; }
+QWidget { background: #0c0c0c; color: #ededed; font-family: 'Segoe UI'; font-size: 13px; }
+QDialog#processDialog { background: #141414; border: 1px solid #2a2a2a; border-radius: 8px; }
 QDialog#processDialog QLabel, QDialog#processDialog QCheckBox { background: transparent; }
-QDialog#processDialog QLabel#processTitle { font-size: 20px; font-weight: 600; color: #ded8cf; }
-QMainWindow { background: #151515; }
-QLabel#title { font-size: 25px; font-weight: 600; color: #f1ece4; }
-QLabel#subtle { color: #99958e; }
-QLabel#brand { font-size: 22px; font-weight: 650; color: #f0ebe2; }
-QLabel#eyebrow { color: #d78061; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
-QLabel#metric { font-size: 22px; font-weight: 600; color: #f1ece4; }
-QLabel#percent { font-size: 18px; font-weight: 650; color: #e08a68; }
-QLabel:disabled { color: #615e58; }
-QFrame#sidebar { background: #101010; border-right: 1px solid #302e2a; }
+QDialog#processDialog QLabel#processTitle { font-size: 20px; font-weight: 600; color: #ededed; }
+QMainWindow { background: #0c0c0c; }
+QLabel#title { font-size: 22px; font-weight: 600; color: #ededed; }
+QLabel#subtle { color: #878787; }
+QLabel#brand { font-size: 15px; font-weight: 600; color: #ededed; letter-spacing: 3px; }
+QLabel#eyebrow { color: #878787; font-size: 10px; font-weight: 600; letter-spacing: 1px; }
+QLabel#metric { font-size: 22px; font-weight: 600; color: #ededed; }
+QLabel#percent { font-size: 18px; font-weight: 650; color: #ededed; }
+QLabel:disabled { color: #5a5a5a; }
+QFrame#sidebar { background: #0c0c0c; border-right: 1px solid #1e1e1e; }
 QFrame#sidebar QLabel { background: transparent; }
-QFrame#card { background: #1d1d1c; border: 1px solid #34322f; border-radius: 4px; }
+QFrame#card { background: #141414; border: 1px solid #282828; border-radius: 6px; }
 QFrame#card QLabel { background: transparent; }
-QFrame#modelCell { background: #181817; border: 1px solid #34312e; border-radius: 4px; }
+QFrame#modelCell { background: #111111; border: 1px solid #282828; border-radius: 6px; }
 QFrame#modelCell QLabel { background: transparent; }
-QPushButton { background: #252422; border: 1px solid #403d38; padding: 8px 14px; border-radius: 3px; font-weight: 550; }
-QPushButton:hover { background: #302e2b; border-color: #777067; }
-QPushButton:pressed { background: #3a3732; }
-QPushButton:disabled { color: #66635e; background: #1b1b1a; border-color: #2a2927; }
-QPushButton#primary { background: #c86f50; color: #16120f; border: 1px solid #e08a68; }
-QPushButton#primary:hover { background: #df8060; }
-QPushButton#primary:disabled { background: #493127; color: #846456; border-color: #53382d; }
-QPushButton#processStart { background: #b8d9c3; color: #102018; border: 0; padding: 5px 12px; border-radius: 4px; font-weight: 750; }
-QPushButton#processStart:hover { background: #cce8d4; }
-QPushButton#processStart:pressed { background: #8bb99f; }
-QPushButton#processStart:disabled { background: #29332d; color: #68766e; border-color: #39463e; }
-QPushButton#processCancel { background: transparent; color: #f40009; border: 0; padding: 0; font-size: 32px; font-weight: 500; }
-QPushButton#processCancel:hover { background: transparent; color: #ff4349; }
-QPushButton#queueDelete { background: #252422; border: 1px solid #514d47; border-radius: 3px; padding: 0; }
-QPushButton#queueDelete:hover { background: #32191a; border-color: #8f4144; }
-QPushButton#libraryPrimary { background: #9bbfce; color: #102128; border: 1px solid #b8d5df; font-weight: 650; }
-QPushButton#libraryPrimary:hover { background: #b2d1dd; }
-QPushButton#mediaIcon { background: #232321; border: 1px solid #484640; padding: 3px; border-radius: 4px; }
-QPushButton#mediaIcon:hover { background: #30302d; border-color: #858078; }
-QPushButton#danger { color: #d79882; }
+QPushButton { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 7px 12px; border-radius: 6px; font-weight: 500; color: #ededed; }
+QPushButton:hover { background: #222222; border-color: #3a3a3a; }
+QPushButton:pressed { background: #2a2a2a; }
+QPushButton:disabled { color: #5a5a5a; background: #111111; border-color: #1e1e1e; }
+QPushButton#primary { background: #ededed; color: #0c0c0c; border: 1px solid #ededed; }
+QPushButton#primary:hover { background: #ffffff; }
+QPushButton#primary:disabled { background: #2a2a2a; color: #5a5a5a; border-color: #2a2a2a; }
+QPushButton#processStart { background: #ededed; color: #0c0c0c; border: 0; padding: 5px 12px; border-radius: 6px; font-weight: 700; }
+QPushButton#processStart:hover { background: #ffffff; }
+QPushButton#processStart:pressed { background: #c0c0c0; }
+QPushButton#processStart:disabled { background: #1e1e1e; color: #5a5a5a; border-color: #282828; }
+QPushButton#processCancel { background: transparent; color: #ef4444; border: 0; padding: 0; font-size: 32px; font-weight: 500; }
+QPushButton#processCancel:hover { background: transparent; color: #f87171; }
+QPushButton#queueDelete { background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 6px; padding: 0; }
+QPushButton#queueDelete:hover { background: #2a1515; border-color: #7f1d1d; }
+QPushButton#libraryPrimary { background: #ededed; color: #0c0c0c; border: 1px solid #ededed; font-weight: 600; }
+QPushButton#libraryPrimary:hover { background: #ffffff; }
+QPushButton#mediaIcon { background: #141414; border: 1px solid #2e2e2e; padding: 3px; border-radius: 6px; }
+QPushButton#mediaIcon:hover { background: #222222; border-color: #3a3a3a; }
+QPushButton#danger { color: #ef4444; }
 QPushButton#timelineTool { padding: 6px 8px; font-size: 12px; }
-QPushButton#segment { padding: 6px 12px; color: #aaa69f; background: #1d1d1c; }
-QPushButton#segment:checked { color: #f4e9e1; background: #493128; border-color: #c86f50; }
-QPushButton#segment:disabled { color: #625f59; background: #191918; border-color: #292826; }
-QPushButton#formatLeft, QPushButton#formatRight { padding: 5px 10px; color: #aaa69f; background: #171716; border: 1px solid #45423e; }
-QPushButton#formatLeft { border-radius: 4px 0 0 4px; border-right: 0; }
-QPushButton#formatRight { border-radius: 0 4px 4px 0; }
-QPushButton#formatLeft:checked, QPushButton#formatRight:checked { color: #16120f; background: #d28a6e; border-color: #d28a6e; font-weight: 700; }
-QPushButton#formatLeft:disabled, QPushButton#formatRight:disabled { color: #57544f; background: #181817; border-color: #292826; }
-QToolButton#nav { border: 0; border-left: 2px solid transparent; background: transparent; padding: 7px 3px; color: #aaa69f; font-size: 10px; }
-QToolButton#nav:hover { color: #f2ece4; background: #1a1918; }
-QToolButton#nav:checked { color: #f2ece4; background: #201c19; border-left-color: #d78061; }
-QLabel#resourceMeter { color: rgba(255,255,255,150); font-size: 9px; font-weight: 350; padding: 1px 0; }
-QTreeWidget, QListWidget, QTextBrowser { background: #191919; border: 1px solid #34322f; border-radius: 3px; outline: none; }
-QTreeWidget::item { min-height:  34px; padding: 2px; }
-QTreeWidget::item:selected, QListWidget::item:selected { background: #483128; color: #fff5ee; }
-QListWidget::item { padding: 9px; border-bottom: 1px solid #302e2b; }
-QHeaderView::section { background: #222120; color: #aaa69f; border: 0; border-bottom: 1px solid #3b3834; padding: 9px; font-weight: 600; }
-QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { background: #20201f; border: 1px solid #46423d; border-radius: 3px; padding: 7px; min-height: 18px; }
-QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled { background: #191918; color: #625f59; border-color: #292826; }
-QComboBox QAbstractItemView { background: #20201f; selection-background-color: #483128; }
+QPushButton#segment { padding: 6px 12px; color: #878787; background: #141414; }
+QPushButton#segment:checked { color: #ededed; background: #1e1e1e; border-color: #3a3a3a; }
+QPushButton#segment:disabled { color: #5a5a5a; background: #111111; border-color: #1e1e1e; }
+QPushButton#formatLeft, QPushButton#formatRight { padding: 5px 10px; color: #878787; background: #111111; border: 1px solid #2e2e2e; }
+QPushButton#formatLeft { border-radius: 6px 0 0 6px; border-right: 0; }
+QPushButton#formatRight { border-radius: 0 6px 6px 0; }
+QPushButton#formatLeft:checked, QPushButton#formatRight:checked { color: #0c0c0c; background: #ededed; border-color: #ededed; font-weight: 700; }
+QPushButton#formatLeft:disabled, QPushButton#formatRight:disabled { color: #5a5a5a; background: #111111; border-color: #1e1e1e; }
+QToolButton#nav { border: 0; border-left: 3px solid transparent; background: transparent; padding: 8px 12px; color: #878787; font-size: 12px; }
+QToolButton#nav:hover { color: #ededed; background: #141414; }
+QToolButton#nav:checked { color: #ededed; background: #1a1a1a; border-left-color: #ededed; }
+QLabel#resourceMeter { color: #5a5a5a; font-size: 9px; font-weight: 400; padding: 1px 0; }
+QLabel#sectionHeader { color: #5a5a5a; font-size: 11px; font-weight: 600; letter-spacing: 1px; background: transparent; padding: 4px 0; }
+QToolButton#collectionItem { border: 0; background: transparent; padding: 6px 14px; color: #878787; font-size: 12px; text-align: left; }
+QToolButton#collectionItem:hover { color: #ededed; background: #141414; }
+QToolButton#collectionItem:checked { color: #ededed; background: #1a1a1a; }
+QTreeWidget, QListWidget, QTextBrowser { background: #111111; border: 1px solid #282828; border-radius: 6px; outline: none; }
+QTreeWidget::item { min-height: 34px; padding: 2px; }
+QTreeWidget::item:selected, QListWidget::item:selected { background: #1e1e1e; color: #ededed; }
+QListWidget::item { padding: 8px; border-bottom: 1px solid #1e1e1e; }
+QHeaderView::section { background: #111111; color: #878787; border: 0; border-bottom: 1px solid #282828; padding: 8px 12px; font-weight: 600; font-size: 12px; }
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { background: #141414; border: 1px solid #282828; border-radius: 6px; padding: 7px 10px; min-height: 18px; color: #ededed; }
+QLineEdit:focus, QComboBox:focus { border: 1px solid #3b82f6; }
+QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled { background: #0c0c0c; color: #5a5a5a; border-color: #1e1e1e; }
+QComboBox QAbstractItemView { background: #141414; selection-background-color: #1e1e1e; border: 1px solid #282828; }
+QComboBox::drop-down { border: 0; padding-right: 8px; }
 QCheckBox { spacing: 9px; padding: 4px; }
 QCheckBox::indicator { width: 17px; height: 17px; }
 QWidget#transparentRow, QSlider { background: transparent; }
-QSlider::groove:horizontal { height: 2px; background: #45433f; border: 0; }
-QSlider::sub-page:horizontal { height: 2px; background: #aaa69e; border: 0; }
-QSlider::handle:horizontal { background: #e8e2d9; border: 2px solid #151515; width: 12px; height: 12px; margin: -7px 0; border-radius: 7px; }
-QSlider:disabled::groove:horizontal { background: #292826; }
-QSlider:disabled::sub-page:horizontal { background: #3c3a37; }
-QSlider:disabled::handle:horizontal { background: #595650; border-color: #191918; }
-QProgressBar { background: #292826; color: #f4e6dc; border: 1px solid #3c3935; border-radius: 3px; min-height: 18px; text-align: center; font-size: 11px; font-weight: 600; }
-QProgressBar::chunk { background: #b96346; border-radius: 2px; }
-QScrollBar:vertical { background: #181818; width: 10px; }
-QScrollBar::handle:vertical { background: #494641; min-height: 30px; border-radius: 4px; }
+QSlider::groove:horizontal { height: 3px; background: #282828; border: 0; border-radius: 1px; }
+QSlider::sub-page:horizontal { height: 3px; background: #ededed; border: 0; border-radius: 1px; }
+QSlider::handle:horizontal { background: #ededed; border: 2px solid #0c0c0c; width: 12px; height: 12px; margin: -6px 0; border-radius: 7px; }
+QSlider:disabled::groove:horizontal { background: #1e1e1e; }
+QSlider:disabled::sub-page:horizontal { background: #2a2a2a; }
+QSlider:disabled::handle:horizontal { background: #3a3a3a; border-color: #0c0c0c; }
+QProgressBar { background: #1e1e1e; color: #ededed; border: 1px solid #282828; border-radius: 6px; min-height: 18px; text-align: center; font-size: 11px; font-weight: 600; }
+QProgressBar::chunk { background: #ededed; border-radius: 5px; }
+QScrollBar:vertical { background: #0c0c0c; width: 8px; }
+QScrollBar::handle:vertical { background: #2a2a2a; min-height: 30px; border-radius: 4px; }
+QScrollBar::handle:vertical:hover { background: #3a3a3a; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
-QToolTip { color: #eee8df; background: #302e2b; border: 1px solid #68625b; }
-QSplitter::handle:horizontal { background: #3b3935; width: 4px; margin: 8px 1px; border-radius: 2px; }
-QSplitter::handle:horizontal:hover { background: #d78061; }
-QPushButton#advancedToggle { background: #1b1b1a; border-color: #393733; padding: 3px; }
-QPushButton#advancedToggle:checked { color: #f0e8df; border-color: #7a746c; background: #252422; }
-QFrame#saveArea { background: #211f1c; border: 1px solid #504940; border-radius: 5px; }
-QFrame#saveArea QLabel, QFrame#saveArea QWidget { background: transparent; }
-QWidget#paperPage { background: #151515; color: #e8e3da; }
-QWidget#paperPage QLabel { background: transparent; color: #e8e3da; }
-QWidget#paperPage QLabel#paperTitle { font-family: Georgia; font-size: 28px; font-weight: 600; color: #f1ece4; }
-QWidget#paperPage QLabel#paperEmptyTitle { font-family: Georgia; font-size: 20px; font-weight: 600; color: #e8e3da; }
-QWidget#paperPage QLabel#paperEyebrow { color: #d78061; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
-QWidget#paperPage QLabel#paperSubtle { color: #99958e; }
-QWidget#paperPage QFrame#paperRail, QWidget#paperPage QFrame#paperCard,
-QWidget#paperPage QWidget#paperSheet { background: #1d1d1c; border: 1px solid #34322f; }
-QWidget#paperPage QFrame#paperSegment { background: transparent; border: 0; border-bottom: 1px solid #302e2b; }
-QWidget#paperPage QFrame#paperSegment[highlighted="true"] { background: #443820; }
-QWidget#paperPage QLineEdit, QWidget#paperPage QTextEdit, QWidget#paperPage QTextBrowser,
-QWidget#paperPage QListWidget { background: #191919; color: #e8e3da; border: 1px solid #3a3733; selection-background-color: #483128; selection-color: #fff5ee; }
-QWidget#paperPage QLineEdit { padding: 7px 9px; border-radius: 4px; }
-QWidget#paperPage QTextEdit { background: transparent; border: 0; font-family: 'Cascadia Mono', Consolas; font-size: 14px; }
-QWidget#paperPage QPushButton, QWidget#paperPage QToolButton { background: #252422; color: #e8e3da; border: 1px solid #403d38; padding: 7px 11px; border-radius: 4px; }
-QWidget#paperPage QPushButton:hover, QWidget#paperPage QToolButton:hover { background: #302e2b; border-color: #777067; }
-QWidget#paperPage QPushButton#paperPrimary { background: #c86f50; color: #16120f; border-color: #e08a68; font-weight: 650; }
-QWidget#paperPage QPushButton#paperPrimary:hover { background: #df8060; }
-QWidget#paperPage QPushButton#paperPrimary:disabled { background: #493127; color: #846456; border-color: #53382d; }
-QWidget#paperPage QToolButton:checked { background: #443820; color: #f5e7bd; border-color: #b88a31; }
-QWidget#paperPage QScrollArea { background: #151515; border: 0; }
-QWidget#paperPage QSplitter::handle:horizontal { background: #3b3935; width: 3px; margin: 8px 2px; }
-QWidget#paperPage QSplitter::handle:horizontal:hover { background: #d78061; }
-QWidget#paperPage QCheckBox { color: #e8e3da; background: transparent; }
-'''
-
-
-# The 1.17 desk uses restrained graphite surfaces and crisp, compact controls.
-STYLE += '''
-QWidget { background: #14181b; color: #dce1e5; }
-QMainWindow { background: #111518; }
-QLabel { background: transparent; }
-QLabel#subtle, QLabel#paperSubtle { color: #9aa6ae; }
-QLabel#title { font-size: 22px; }
-QLabel#eyebrow { color: #a9b4bc; font-size: 10px; }
-QFrame#sidebar { background: #101417; border-right: 1px solid #30383e; }
-QToolButton#nav { padding: 6px 1px; color: #b7c1c8; font-size: 10px; }
-QToolButton#nav:checked { background: #27221e; color: #f39754; border-left: 2px solid #f18b45; }
-QToolButton#nav:hover { background: #20272c; }
-QFrame#card, QFrame#paperCard, QFrame#paperRail { background: #191e22; border: 1px solid #303940; border-radius: 4px; }
-QPushButton { background: #22292e; border: 1px solid #38434b; padding: 6px 10px; border-radius: 4px; }
-QPushButton:hover { background: #2b353c; border-color: #667986; }
-QPushButton#primary, QPushButton#paperPrimary { background: #e68b4f; color: #17191b; border-color: #f49b60; }
-QPushButton:focus, QToolButton:focus, QLineEdit:focus, QListWidget:focus, QTextEdit:focus { border: 1px solid #659ed3; }
-QTreeWidget, QListWidget, QTextBrowser { background: #171c20; border: 1px solid #303940; }
-QTreeWidget::item:selected, QListWidget::item:selected { background: #36302a; color: #fff3e7; }
-QListWidget::item { border-bottom: 1px solid #293238; padding: 8px; }
-QHeaderView::section { background: #20272c; color: #aeb9c1; border-bottom: 1px solid #343e46; padding: 7px; }
-QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { background: #1c2328; border: 1px solid #39454e; padding: 6px 8px; color: #dce1e5; }
-QMenu { background: #20272c; color: #dce1e5; border: 1px solid #45545f; padding: 5px; }
-QMenu::item { padding: 7px 24px 7px 12px; }
-QMenu::item:selected { background: #38434b; }
-QMenu::separator { height: 1px; background: #3a444c; margin: 5px; }
-QMenu::item:disabled { color: #77848e; }
-QWidget#workspaceBar { background: #14191d; border-bottom: 1px solid #303940; }
-QLabel#workspaceTitle { font-size: 16px; font-weight: 600; color: #e7edf1; }
-QWidget#paperPage { background: #14181b; }
-QWidget#paperPage QLabel { color: #dce1e5; }
-QWidget#paperPage QWidget#paperSheet { background: #171c20; border: 0; }
-QWidget#paperPage QTextEdit { font-family: 'Segoe UI'; font-size: 13px; background: transparent; color: #dce1e5; border: 0; }
-QWidget#paperPage QLineEdit { background: #1c2328; color: #dce1e5; border: 1px solid #39454e; padding: 5px 7px; }
-QWidget#paperPage QListWidget { background: #171c20; border: 0; color: #dce1e5; }
-QWidget#paperPage QScrollArea { background: #171c20; border: 0; }
-QWidget#paperPage QPushButton, QWidget#paperPage QToolButton { padding: 5px 7px; background: #22292e; border: 1px solid #38434b; color: #dce1e5; }
-QWidget#paperPage QPushButton#paperPrimary { background: #e68b4f; color: #17191b; border-color: #f49b60; }
-QWidget#paperPage QFrame#paperSegment { border: 0; border-bottom: 1px solid #2b343a; }
-QWidget#paperPage QFrame#paperSegment[highlighted="true"] { background: #393322; }
-QWidget#panelHeader { background: #1b2126; border-bottom: 1px solid #303940; }
-QLabel#panelTitle { background: transparent; font-size: 12px; font-weight: 600; }
-QDockWidget { border: 1px solid #303940; }
-QMainWindow#modularWorkspace { background: #101518; }
-QMainWindow::separator { width: 6px; height: 6px; background: #101518; }
-QMainWindow::separator:hover { background: #db8a50; }
-QToolButton#deskTool, QWidget#paperPage QToolButton#deskTool { background: transparent; border: 1px solid transparent; padding: 3px; }
-QToolButton#deskTool:hover, QWidget#paperPage QToolButton#deskTool:hover { background: #303b43; border-color: #4a5b68; }
-QToolButton#layoutButton { background: #232b31; border: 1px solid #3a464f; padding: 6px 10px; border-radius: 4px; }
-QToolButton#workspaceMode, QWidget#paperPage QToolButton#workspaceMode { background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 8px 14px; }
-QToolButton#workspaceMode:checked, QWidget#paperPage QToolButton#workspaceMode:checked { color: #f49b60; background: #232321; border-bottom: 2px solid #ed8e4e; }
-QToolButton#workspaceMode:hover { background: #242d33; }
-QSlider::groove:horizontal { background: #3b474f; height: 3px; }
-QSlider::sub-page:horizontal { background: #e38b50; }
-QSlider::handle:horizontal { background: #ec945b; border: 2px solid #171c20; }
-QScrollBar:horizontal { background: #161c20; height: 10px; }
-QScrollBar::handle:horizontal { background: #48555f; min-width: 28px; border-radius: 4px; }
+QScrollBar:horizontal { background: #0c0c0c; height: 8px; }
+QScrollBar::handle:horizontal { background: #2a2a2a; min-width: 28px; border-radius: 4px; }
+QScrollBar::handle:horizontal:hover { background: #3a3a3a; }
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
-QScrollBar:vertical { background: #161c20; width: 9px; }
-QScrollBar::handle:vertical { background: #48555f; border-radius: 4px; }
-QTabBar::tab { background: #1b2227; color: #b8c2ca; padding: 7px 14px; border: 1px solid #34414a; }
-QTabBar::tab:selected { color: #f3a66f; border-bottom: 2px solid #e38b50; }
+QToolTip { color: #ededed; background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 4px; padding: 4px 8px; }
+QSplitter::handle:horizontal { background: #282828; width: 4px; margin: 8px 1px; border-radius: 2px; }
+QSplitter::handle:horizontal:hover { background: #3a3a3a; }
+QPushButton#advancedToggle { background: #111111; border-color: #282828; padding: 3px; }
+QPushButton#advancedToggle:checked { color: #ededed; border-color: #3a3a3a; background: #1a1a1a; }
+QFrame#saveArea { background: #141414; border: 1px solid #282828; border-radius: 6px; }
+QFrame#saveArea QLabel, QFrame#saveArea QWidget { background: transparent; }
+QMenu { background: #141414; color: #ededed; border: 1px solid #282828; padding: 4px; border-radius: 6px; }
+QMenu::item { padding: 7px 24px 7px 12px; border-radius: 4px; }
+QMenu::item:selected { background: #1e1e1e; }
+QMenu::separator { height: 1px; background: #282828; margin: 4px 8px; }
+QMenu::item:disabled { color: #5a5a5a; }
+QWidget#paperPage { background: #0c0c0c; color: #ededed; }
+QWidget#paperPage QLabel { background: transparent; color: #ededed; }
+QWidget#paperPage QLabel#paperTitle { font-family: 'Segoe UI'; font-size: 24px; font-weight: 600; color: #ededed; }
+QWidget#paperPage QLabel#paperEmptyTitle { font-family: 'Segoe UI'; font-size: 18px; font-weight: 600; color: #ededed; }
+QWidget#paperPage QLabel#paperEyebrow { color: #878787; font-size: 10px; font-weight: 600; letter-spacing: 1px; }
+QWidget#paperPage QLabel#paperSubtle { color: #878787; }
+QWidget#paperPage QFrame#paperRail, QWidget#paperPage QFrame#paperCard,
+QWidget#paperPage QWidget#paperSheet { background: #111111; border: 1px solid #282828; }
+QWidget#paperPage QFrame#paperSegment { background: transparent; border: 0; border-bottom: 1px solid #1e1e1e; }
+QWidget#paperPage QFrame#paperSegment[highlighted="true"] { background: #1a1a0a; }
+QWidget#paperPage QLineEdit, QWidget#paperPage QTextEdit, QWidget#paperPage QTextBrowser,
+QWidget#paperPage QListWidget { background: #111111; color: #ededed; border: 1px solid #282828; selection-background-color: #1e1e1e; selection-color: #ededed; }
+QWidget#paperPage QLineEdit { padding: 7px 9px; border-radius: 6px; }
+QWidget#paperPage QTextEdit { background: transparent; border: 0; font-family: 'Cascadia Mono', Consolas; font-size: 14px; }
+QWidget#paperPage QPushButton, QWidget#paperPage QToolButton { background: #1a1a1a; color: #ededed; border: 1px solid #2e2e2e; padding: 6px 10px; border-radius: 6px; }
+QWidget#paperPage QPushButton:hover, QWidget#paperPage QToolButton:hover { background: #222222; border-color: #3a3a3a; }
+QWidget#paperPage QPushButton#paperPrimary { background: #ededed; color: #0c0c0c; border-color: #ededed; font-weight: 650; }
+QWidget#paperPage QPushButton#paperPrimary:hover { background: #ffffff; }
+QWidget#paperPage QPushButton#paperPrimary:disabled { background: #2a2a2a; color: #5a5a5a; border-color: #2a2a2a; }
+QWidget#paperPage QToolButton:checked { background: #1e1e1e; color: #ededed; border-color: #3a3a3a; }
+QWidget#paperPage QScrollArea { background: #0c0c0c; border: 0; }
+QWidget#paperPage QSplitter::handle:horizontal { background: #282828; width: 3px; margin: 8px 2px; }
+QWidget#paperPage QSplitter::handle:horizontal:hover { background: #3a3a3a; }
+QWidget#paperPage QCheckBox { color: #ededed; background: transparent; }
+QWidget#panelHeader { background: #111111; border-bottom: 1px solid #282828; }
+QLabel#panelTitle { background: transparent; font-size: 12px; font-weight: 600; }
+QDockWidget { border: 1px solid #282828; }
+QMainWindow#modularWorkspace { background: #0c0c0c; }
+QMainWindow::separator { width: 6px; height: 6px; background: #0c0c0c; }
+QMainWindow::separator:hover { background: #3a3a3a; }
+QToolButton#deskTool, QWidget#paperPage QToolButton#deskTool { background: transparent; border: 1px solid transparent; padding: 3px; }
+QToolButton#deskTool:hover, QWidget#paperPage QToolButton#deskTool:hover { background: #1e1e1e; border-color: #2e2e2e; }
+QToolButton#layoutButton { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 6px 10px; border-radius: 6px; }
+QToolButton#workspaceMode, QWidget#paperPage QToolButton#workspaceMode { background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 8px 14px; }
+QToolButton#workspaceMode:checked, QWidget#paperPage QToolButton#workspaceMode:checked { color: #ededed; background: transparent; border-bottom: 2px solid #ededed; }
+QToolButton#workspaceMode:hover { background: #141414; }
+QWidget#workspaceBar { background: #0c0c0c; border-bottom: 1px solid #282828; }
+QLabel#workspaceTitle { font-size: 16px; font-weight: 600; color: #ededed; }
+QTabBar::tab { background: transparent; color: #878787; padding: 8px 16px; border: 0; border-bottom: 2px solid transparent; }
+QTabBar::tab:selected { color: #ededed; border-bottom: 2px solid #ededed; }
+QTabBar::tab:hover { color: #b0b0b0; }
+QTabWidget::pane { border: 0; border-top: 1px solid #282828; }
 '''
 
 def label(text, kind=None):
@@ -295,6 +265,32 @@ def tile_icon(kind, colour_override=None):
         painter.drawLine(17, 11, 17, 23)
         painter.drawLine(17, 11, 28, 17)
         painter.drawLine(28, 17, 17, 23)
+    elif kind == 'collection':
+        painter.drawRoundedRect(6, 9, 32, 20, 2, 2)
+        painter.drawLine(10, 9, 14, 5)
+        painter.drawLine(14, 5, 22, 5)
+        painter.drawLine(22, 5, 26, 9)
+    elif kind == 'interview':
+        painter.drawEllipse(16, 7, 12, 12)
+        painter.drawArc(9, 21, 26, 16, 0, 180 * 16)
+    elif kind == 'broll':
+        painter.drawRoundedRect(7, 8, 30, 20, 2, 2)
+        painter.drawLine(13, 8, 13, 28)
+        painter.drawLine(31, 8, 31, 28)
+        painter.drawLine(7, 14, 13, 14)
+        painter.drawLine(7, 22, 13, 22)
+        painter.drawLine(31, 14, 37, 14)
+        painter.drawLine(31, 22, 37, 22)
+    elif kind == 'archive':
+        painter.drawRoundedRect(7, 6, 30, 24, 2, 2)
+        painter.drawLine(7, 13, 37, 13)
+        painter.drawLine(18, 19, 26, 19)
+    elif kind == 'more':
+        painter.setBrush(QBrush(QColor(colour)))
+        painter.drawEllipse(20, 9, 4, 4)
+        painter.drawEllipse(20, 16, 4, 4)
+        painter.drawEllipse(20, 23, 4, 4)
+        painter.setBrush(Qt.NoBrush)
     elif kind == 'settings':
         painter.drawEllipse(13, 8, 18, 18)
         painter.drawEllipse(19, 14, 6, 6)
@@ -634,12 +630,12 @@ class SearchHighlightDelegate(QStyledItemDelegate):
             width = metrics.horizontalAdvance(part)
             if kind == 'direct':
                 painter.fillRect(x - 2, baseline - metrics.ascent() - 2,
-                                 width + 4, metrics.height() + 3, QColor('#d78061'))
-                painter.setPen(QColor('#151515'))
+                                 width + 4, metrics.height() + 3, QColor('#f59e0b'))
+                painter.setPen(QColor('#0c0c0c'))
             elif kind == 'embedded':
                 painter.fillRect(x - 2, baseline - metrics.ascent() - 2,
-                                 width + 4, metrics.height() + 3, QColor('#493128'))
-                painter.setPen(QColor('#f4ded5'))
+                                 width + 4, metrics.height() + 3, QColor('#3d2806'))
+                painter.setPen(QColor('#fde68a'))
                 painter.drawLine(x, baseline + 2, x + width, baseline + 2)
             else:
                 painter.setPen(normal_colour)
@@ -664,18 +660,86 @@ class SearchResultDelegate(QStyledItemDelegate):
         selected = bool(option.state & QStyle.State_Selected)
         painter.save()
         painter.setClipRect(rect)
-        painter.setPen(QColor('#fff5ee') if selected else QColor('#e8e3da'))
+        painter.setPen(QColor('#ffffff') if selected else QColor('#ededed'))
         painter.setFont(QFont('Segoe UI', 10, QFont.DemiBold))
         painter.drawText(rect.left(), rect.top() + 14, data.get('title', ''))
-        painter.setPen(QColor('#c6beb4') if selected else QColor('#99958e'))
+        painter.setPen(QColor('#a0a0a0') if selected else QColor('#878787'))
         painter.setFont(QFont('Segoe UI', 8))
         painter.drawText(rect.left(), rect.top() + 31, data.get('meta', ''))
         hits = data.get('hits', '')
         origins = data.get('origins', ())
         paint_origin_icons(painter, origins, rect.left() + len(origins) * 24, rect.top() + 33, selected)
         if hits:
-            painter.setPen(QColor('#f0ad91') if selected else QColor('#b58c7b'))
+            painter.setPen(QColor('#f59e0b') if selected else QColor('#d97706'))
             painter.drawText(rect.left() + len(origins) * 24 + 4, rect.top() + 48, hits)
+        painter.restore()
+
+
+class MediaTableDelegate(QStyledItemDelegate):
+    """Paints a video thumbnail alongside two lines of title and metadata in the Media column."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._pixmap_cache = {}
+
+    def sizeHint(self, option, index):
+        return QSize(option.rect.width(), 62)
+
+    def paint(self, painter, option, index):
+        if index.column() != 1:
+            super().paint(painter, option, index)
+            return
+        data = index.data(Qt.UserRole + 1) or {}
+        styled = QStyleOptionViewItem(option)
+        self.initStyleOption(styled, index)
+        styled.text = ''
+        style = styled.widget.style() if styled.widget else QApplication.style()
+        style.drawControl(QStyle.CE_ItemViewItem, styled, painter, styled.widget)
+        rect = option.rect.adjusted(4, 5, -6, -5)
+        selected = bool(option.state & QStyle.State_Selected)
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setClipRect(option.rect)
+
+        thumb_rect = rect.adjusted(2, 2, -rect.width() + 68, -2)
+        thumb_path = data.get('thumbnail')
+        pixmap = None
+        if thumb_path:
+            if thumb_path not in self._pixmap_cache:
+                p = QPixmap(thumb_path)
+                if not p.isNull():
+                    self._pixmap_cache[thumb_path] = p.scaled(QSize(66, 48), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+                else:
+                    self._pixmap_cache[thumb_path] = None
+            pixmap = self._pixmap_cache.get(thumb_path)
+
+        if pixmap:
+            painter.save()
+            clip_path = QPainterPath()
+            clip_path.addRoundedRect(thumb_rect.left(), thumb_rect.top(), 64, 46, 4, 4)
+            painter.setClipPath(clip_path)
+            painter.drawPixmap(thumb_rect.left(), thumb_rect.top(), 64, 46, pixmap)
+            painter.restore()
+        else:
+            painter.setPen(QPen(QColor('#262626'), 1))
+            painter.setBrush(QBrush(QColor('#171717')))
+            painter.drawRoundedRect(thumb_rect.left(), thumb_rect.top(), 64, 46, 4, 4)
+            painter.setPen(QColor('#555555'))
+            painter.setFont(QFont('Segoe UI', 8))
+            painter.drawText(thumb_rect.left(), thumb_rect.top(), 64, 46, Qt.AlignCenter, 'No thumb')
+
+        text_left = thumb_rect.left() + 74
+        painter.setPen(QColor('#ffffff') if selected else QColor('#ededed'))
+        painter.setFont(QFont('Segoe UI', 9, QFont.DemiBold))
+        painter.drawText(text_left, rect.top() + 19, data.get('title', ''))
+
+        painter.setPen(QColor('#888888'))
+        painter.setFont(QFont('Segoe UI', 8))
+        painter.drawText(text_left, rect.top() + 37, data.get('meta', ''))
+
+        origins = data.get('origins', ())
+        if origins:
+            paint_origin_icons(painter, origins, text_left + len(origins) * 20, rect.top() + 26, selected)
+
         painter.restore()
 
 
@@ -1634,410 +1698,569 @@ class FootageSearchPage(QWidget):
 class ResultsPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.window = parent
         self.records = []
         self.record = None
         self.frame_offset = 0
         self.visual_matches = {}
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 25, 28, 22)
-        layout.setSpacing(10)
-        self.page_title = label('Video library', 'title')
-        layout.addWidget(self.page_title)
-        layout.addWidget(label('Read the transcript, preview the source, and review every generated frame.', 'subtle'))
+        self.active_collection_id = 'all'
+        self.checked_ids = set()
 
-        search_bar = QHBoxLayout()
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
+
+        self.main_split = QSplitter(Qt.Horizontal)
+        self.main_split.setHandleWidth(1)
+        self.main_split.setStyleSheet("QSplitter::handle { background: #1e1e1e; }")
+
+        # LEFT SIDE: Footage Table View
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(28, 20, 24, 20)
+        left_layout.setSpacing(14)
+
+        # Breadcrumb Bar
+        self.breadcrumb = label('All footage  /  Library', 'subtle')
+        self.breadcrumb.setStyleSheet('color: #878787; font-size: 11px; font-weight: 500;')
+        left_layout.addWidget(self.breadcrumb)
+
+        # Header Row: "Your footage" + meta stats + "+ Add media"
+        header_row = QHBoxLayout()
+        header_text_col = QVBoxLayout()
+        header_text_col.setSpacing(4)
+        self.page_heading = label('Your footage', 'title')
+        self.page_heading.setStyleSheet('font-size: 24px; font-weight: 600; color: #ededed;')
+        header_text_col.addWidget(self.page_heading)
+        self.footage_stats = label('0 files  ·  0m indexed', 'subtle')
+        self.footage_stats.setStyleSheet('color: #878787; font-size: 12px;')
+        header_text_col.addWidget(self.footage_stats)
+        header_row.addLayout(header_text_col)
+        header_row.addStretch()
+
+        self.add_media_btn = button('+ Add media', self.on_add_media)
+        self.add_media_btn.setStyleSheet(
+            'QPushButton { background: #161616; color: #ededed; border: 1px solid #333333; '
+            'border-radius: 6px; padding: 7px 14px; font-weight: 500; font-size: 12px; } '
+            'QPushButton:hover { background: #222222; border-color: #555555; }'
+        )
+        header_row.addWidget(self.add_media_btn)
+        left_layout.addLayout(header_row)
+
+        # Search and Filters Row
+        search_filter_row = QHBoxLayout()
+        search_filter_row.setSpacing(10)
+
         self.search = QLineEdit()
-        self.search.setPlaceholderText('Search dialogue, video names, or visual keywords…')
+        self.search.setPlaceholderText('Search…')
         self.search.setClearButtonEnabled(True)
+        self.search.setStyleSheet(
+            'QLineEdit { background: #141414; border: 1px solid #282828; border-radius: 6px; '
+            'padding: 7px 12px; color: #ededed; font-size: 13px; } '
+            'QLineEdit:focus { border: 1px solid #444444; }'
+        )
         self.search.textChanged.connect(self.populate)
-        self.search.textEdited.connect(lambda _: self.open_search())
-        search_bar.addWidget(self.search, 1)
-        self.audio_scope = ChoiceTile('audio', 'Audio', icon_only=True)
-        self.visual_scope = ChoiceTile('ai', 'Visual', icon_only=True)
-        for control in (self.audio_scope, self.visual_scope):
-            control.setFixedSize(44, 36)
-            control.setChecked(True)
-            control.set_tone(1)
-            control.toggled.connect(self.search_scope_changed)
-            search_bar.addWidget(control)
-        self.audio_scope.setToolTip('Search spoken transcript text.')
-        self.visual_scope.setToolTip('Search offline visual-index keywords.')
-        self.layer = QComboBox()
-        self.layer.addItem('Any depth', '')
-        self.layer.addItem('Foreground', 'foreground')
-        self.layer.addItem('Midground', 'midground')
-        self.layer.addItem('Background', 'background')
-        self.layer.setFixedSize(104, 36)
-        self.layer.currentIndexChanged.connect(self.populate)
-        search_bar.addWidget(self.layer)
-        layout.addLayout(search_bar)
+        search_filter_row.addWidget(self.search, 1)
 
-        self.library_host = QWidget()
-        host_layout = QVBoxLayout(self.library_host)
-        host_layout.setContentsMargins(0, 0, 0, 0)
-        self.workspace_split = QSplitter(Qt.Horizontal)
-        self.workspace_split.setHandleWidth(7)
-        self.workspace_split.setChildrenCollapsible(True)
-        self.search_panel = QFrame()
-        self.search_panel.setObjectName('card')
-        self.search_panel.setMinimumWidth(245)
-        self.search_panel.setMaximumWidth(365)
-        ll = QVBoxLayout(self.search_panel)
-        ll.setContentsMargins(14, 14, 14, 14)
-        search_heading = QHBoxLayout()
-        self.search_heading_label = label('FIND A VIDEO', 'eyebrow')
-        search_heading.addWidget(self.search_heading_label)
-        search_heading.addStretch()
-        self.close_search = button('', self.collapse_search)
-        self.close_search.setObjectName('mediaIcon')
-        self.close_search.setIcon(tile_icon('list_left'))
-        self.close_search.setIconSize(QSize(23, 19))
-        self.close_search.setFixedSize(34, 32)
-        self.close_search.setToolTip('Hide the video list')
-        search_heading.addWidget(self.close_search)
-        ll.addLayout(search_heading)
-        self.list = QListWidget()
-        self.list.setItemDelegate(SearchResultDelegate(self.list))
-        self.list.currentItemChanged.connect(self.select)
-        self.list.itemClicked.connect(self.select)
-        self.list.itemActivated.connect(self.select)
-        ll.addWidget(self.list)
-        right = QWidget()
-        rl = QVBoxLayout(right)
-        rl.setContentsMargins(0, 0, 0, 0)
-        rl.setSpacing(10)
-        toolbar = QHBoxLayout()
-        self.browse_videos = button('See All', self.open_search)
-        self.browse_videos.setIcon(tile_icon('list_right'))
-        self.browse_videos.setIconSize(QSize(22, 18))
-        self.browse_videos.setToolTip('Show the complete video list')
-        toolbar.addWidget(self.browse_videos)
-        toolbar.addStretch()
-        self.open_original = button('Show in Explorer', self.open_source_file)
-        self.open_original.setToolTip('Open the original file location and select this video')
-        toolbar.addWidget(self.open_original)
-        self.preview_toggle = button('Preview', self.toggle_source_preview)
-        self.preview_toggle.setToolTip('Show or hide the source preview to give the transcript more room')
-        toolbar.addWidget(self.preview_toggle)
-        self.open_results = button('Open results folder', self.open_result)
-        self.open_results.setObjectName('libraryPrimary')
-        toolbar.addWidget(self.open_results)
-        rl.addLayout(toolbar)
+        self.source_filter = QComboBox()
+        self.source_filter.addItem('All sources', 'all')
+        self.source_filter.setStyleSheet(
+            'QComboBox { background: #141414; border: 1px solid #282828; border-radius: 6px; '
+            'padding: 6px 12px; color: #ededed; font-size: 12px; min-width: 110px; } '
+            'QComboBox:hover { border-color: #3a3a3a; }'
+        )
+        self.source_filter.currentIndexChanged.connect(self.populate)
+        search_filter_row.addWidget(self.source_filter)
 
-        self.media_split = QSplitter(Qt.Horizontal)
-        self.media_split.setHandleWidth(7)
-        self.media_split.setChildrenCollapsible(True)
-        transcript_panel = QFrame()
-        transcript_panel.setObjectName('card')
-        transcript_layout = QVBoxLayout(transcript_panel)
-        transcript_layout.setContentsMargins(14, 12, 14, 12)
-        transcript_heading = QHBoxLayout()
-        transcript_heading.addWidget(label('TRANSCRIPT', 'eyebrow'))
-        transcript_heading.addStretch()
-        self.transcript_hit = label('—', 'subtle')
-        transcript_heading.addWidget(self.transcript_hit)
-        hit_previous = button('', lambda: self.page_transcript_hit(-1))
-        hit_previous.setObjectName('mediaIcon')
-        hit_previous.setIcon(tile_icon('arrow_left'))
-        hit_previous.setFixedSize(28, 25)
-        hit_previous.setToolTip('Previous transcript hit')
-        transcript_heading.addWidget(hit_previous)
-        hit_next = button('', lambda: self.page_transcript_hit(1))
-        hit_next.setObjectName('mediaIcon')
-        hit_next.setIcon(tile_icon('arrow_right'))
-        hit_next.setFixedSize(28, 25)
-        hit_next.setToolTip('Next transcript hit')
-        transcript_heading.addWidget(hit_next)
-        transcript_layout.addLayout(transcript_heading)
-        self.transcript_search = QLineEdit()
-        self.transcript_search.setPlaceholderText('Filter transcript · select a line to jump to that moment')
-        self.transcript_search.textChanged.connect(self.fill_transcript)
-        transcript_layout.addWidget(self.transcript_search)
-        self.transcript = QListWidget()
-        self.transcript.setMinimumHeight(170)
-        self.transcript.setItemDelegate(
-            SearchHighlightDelegate(lambda: self.transcript_search.text(), self.transcript))
-        self.transcript.itemClicked.connect(self.seek_segment)
-        transcript_layout.addWidget(self.transcript, 1)
-        exports = QHBoxLayout()
-        exports.addWidget(label('Open:', 'subtle'))
-        for fmt in ('txt', 'srt', 'vtt', 'json'):
-            exports.addWidget(button(fmt.upper(), lambda checked=False, f=fmt: self.open_export(f)))
-        exports.addStretch()
-        transcript_layout.addLayout(exports)
-        self.media_split.addWidget(transcript_panel)
+        self.scope_filter = QComboBox()
+        self.scope_filter.addItem('Transcripts + visuals', 'all')
+        self.scope_filter.addItem('Transcripts only', 'audio')
+        self.scope_filter.addItem('Visuals only', 'visual')
+        self.scope_filter.setStyleSheet(
+            'QComboBox { background: #141414; border: 1px solid #282828; border-radius: 6px; '
+            'padding: 6px 12px; color: #ededed; font-size: 12px; min-width: 140px; } '
+            'QComboBox:hover { border-color: #3a3a3a; }'
+        )
+        self.scope_filter.currentIndexChanged.connect(self.populate)
+        search_filter_row.addWidget(self.scope_filter)
+        left_layout.addLayout(search_filter_row)
 
-        self.video_panel = QFrame()
-        self.video_panel.setObjectName('card')
-        self.video_panel.setMinimumWidth(190)
-        video_layout = QVBoxLayout(self.video_panel)
-        video_layout.setContentsMargins(10, 10, 10, 10)
-        video_layout.addWidget(label('SOURCE PREVIEW', 'eyebrow'))
+        # Match Summary Label
+        self.match_summary = label('', 'subtle')
+        self.match_summary.setStyleSheet('color: #878787; font-size: 12px;')
+        left_layout.addWidget(self.match_summary)
+
+        # Main Video Table
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels(['', 'Media', 'Duration', 'Matches', ''])
+        self.tree.setColumnCount(5)
+        self.tree.setRootIsDecorated(False)
+        self.tree.setItemsExpandable(False)
+        self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tree.setUniformRowHeights(True)
+        self.tree.setStyleSheet(
+            'QTreeWidget { background: #0c0c0c; border: 1px solid #1e1e1e; border-radius: 6px; outline: none; } '
+            'QTreeWidget::item { border-bottom: 1px solid #161616; padding: 4px 0px; } '
+            'QTreeWidget::item:hover { background: #121212; } '
+            'QTreeWidget::item:selected { background: #161616; color: #ededed; } '
+            'QHeaderView::section { background: #0c0c0c; color: #878787; border: 0; '
+            'border-bottom: 1px solid #242424; padding: 8px 10px; font-size: 11px; font-weight: 600; text-transform: uppercase; }'
+        )
+        self.tree.setItemDelegate(MediaTableDelegate(self.tree))
+        self.tree.header().setStretchLastSection(False)
+        self.tree.header().setSectionResizeMode(0, QHeaderView.Fixed)
+        self.tree.header().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.tree.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.tree.header().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        self.tree.header().setSectionResizeMode(4, QHeaderView.Fixed)
+        self.tree.setColumnWidth(0, 36)
+        self.tree.setColumnWidth(4, 36)
+
+        self.tree.itemChanged.connect(self.on_table_item_changed)
+        self.tree.currentItemChanged.connect(self.on_table_selection)
+        self.tree.itemClicked.connect(self.on_table_item_clicked)
+        left_layout.addWidget(self.tree, 1)
+
+        # Bottom Action Bar
+        action_bar = QHBoxLayout()
+        action_bar.setContentsMargins(4, 8, 4, 4)
+        self.selection_label = label('0 selected', 'subtle')
+        self.selection_label.setStyleSheet('color: #878787; font-size: 12px;')
+        action_bar.addWidget(self.selection_label)
+
+        action_bar.addStretch()
+
+        self.overflow_btn = button('···', self.on_overflow_menu)
+        self.overflow_btn.setStyleSheet(
+            'QPushButton { background: transparent; border: 1px solid #282828; border-radius: 6px; '
+            'padding: 5px 10px; color: #878787; font-size: 14px; font-weight: bold; } '
+            'QPushButton:hover { background: #161616; color: #ededed; border-color: #444444; }'
+        )
+        action_bar.addWidget(self.overflow_btn)
+
+        self.add_to_collection_btn = button('Add to Collection', self.on_add_to_collection, primary=True)
+        self.add_to_collection_btn.setEnabled(False)
+        self.add_to_collection_btn.setStyleSheet(
+            'QPushButton { background: #ededed; color: #0c0c0c; border: 1px solid #ededed; '
+            'border-radius: 6px; padding: 7px 16px; font-weight: 600; font-size: 12px; } '
+            'QPushButton:hover { background: #ffffff; } '
+            'QPushButton:disabled { background: #222222; color: #555555; border-color: #222222; }'
+        )
+        action_bar.addWidget(self.add_to_collection_btn)
+        left_layout.addLayout(action_bar)
+
+        self.main_split.addWidget(left_widget)
+
+        # RIGHT SIDE: Preview & Details Inspector Panel
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(18, 20, 20, 20)
+        right_layout.setSpacing(12)
+
+        # Video Title & Header
+        preview_top_row = QHBoxLayout()
+        self.preview_title = label('Select a video', 'title')
+        self.preview_title.setStyleSheet('font-size: 16px; font-weight: 600; color: #ededed;')
+        preview_top_row.addWidget(self.preview_title, 1)
+        preview_menu_btn = button('···', self.on_preview_menu)
+        preview_menu_btn.setStyleSheet(
+            'QPushButton { background: transparent; border: 0; color: #878787; font-size: 16px; font-weight: bold; } '
+            'QPushButton:hover { color: #ededed; }'
+        )
+        preview_top_row.addWidget(preview_menu_btn)
+        right_layout.addLayout(preview_top_row)
+
+        self.preview_meta = label('—', 'subtle')
+        self.preview_meta.setStyleSheet('color: #878787; font-size: 11px;')
+        right_layout.addWidget(self.preview_meta)
+
+        # Video Player Frame
+        player_frame = QFrame()
+        player_frame.setObjectName('card')
+        player_frame.setStyleSheet('QFrame#card { background: #000000; border: 1px solid #202020; border-radius: 6px; }')
+        player_layout = QVBoxLayout(player_frame)
+        player_layout.setContentsMargins(0, 0, 0, 0)
+        player_layout.setSpacing(0)
+
         self.video = QVideoWidget()
-        self.video.setMinimumHeight(145)
-        self.video.setMaximumHeight(205)
+        self.video.setMinimumHeight(180)
+        self.video.setMaximumHeight(270)
         self.player = QMediaPlayer(self)
         self.audio = QAudioOutput(self)
         self.audio.setVolume(0.8)
         self.player.setAudioOutput(self.audio)
         self.player.setVideoOutput(self.video)
-        video_layout.addWidget(self.video, 1)
-        controls = QHBoxLayout()
+        player_layout.addWidget(self.video, 1)
+
+        # Custom Player Controls Bar
+        control_bar = QWidget()
+        control_bar.setStyleSheet('QWidget { background: #111111; border-top: 1px solid #1e1e1e; }')
+        control_layout = QHBoxLayout(control_bar)
+        control_layout.setContentsMargins(10, 6, 10, 6)
+        control_layout.setSpacing(8)
+
         self.play_button = button('', self.play)
-        self.play_button.setObjectName('mediaIcon')
         self.play_button.setIcon(tile_icon('play'))
-        self.play_button.setIconSize(QSize(23, 20))
-        self.play_button.setFixedSize(38, 34)
-        self.play_button.setAccessibleName('Play or pause')
-        self.play_button.setToolTip('Play')
-        controls.addWidget(self.play_button)
+        self.play_button.setIconSize(QSize(18, 18))
+        self.play_button.setFixedSize(30, 26)
+        self.play_button.setStyleSheet('QPushButton { background: transparent; border: 0; } QPushButton:hover { background: #222222; }')
+        control_layout.addWidget(self.play_button)
+
+        self.clock = label('00:00:00')
+        self.clock.setStyleSheet('font-family: "Cascadia Mono", Consolas; font-size: 11px; color: #878787;')
+        control_layout.addWidget(self.clock)
+
         self.seek = MarkedSlider(Qt.Horizontal)
         self.seek.sliderMoved.connect(self.player.setPosition)
         self.player.positionChanged.connect(self.position)
         self.player.durationChanged.connect(lambda n: self.seek.setRange(0, n))
         self.player.playbackStateChanged.connect(self.sync_play_icon)
-        controls.addWidget(self.seek)
-        self.clock = label('00:00:00')
-        controls.addWidget(self.clock)
-        video_layout.addLayout(controls)
-        self.media_split.addWidget(self.video_panel)
-        self.media_split.setStretchFactor(0, 3)
-        self.media_split.setStretchFactor(1, 1)
-        self.media_split.setSizes([720, 250])
-        rl.addWidget(self.media_split, 2)
+        control_layout.addWidget(self.seek, 1)
 
-        screenshots_heading = QHBoxLayout()
-        screenshots_heading.addWidget(label('SCREENSHOTS', 'eyebrow'))
-        self.page_label = label('', 'subtle')
-        screenshots_heading.addWidget(self.page_label)
-        screenshots_heading.addStretch()
-        self.previous_frames = button('', lambda: self.page_frames(-1))
-        self.previous_frames.setObjectName('mediaIcon')
-        self.previous_frames.setIcon(tile_icon('arrow_left'))
-        self.previous_frames.setIconSize(QSize(22, 18))
-        self.previous_frames.setFixedSize(36, 34)
-        self.previous_frames.setAccessibleName('Previous screenshots')
-        self.previous_frames.setToolTip('Previous screenshots')
-        screenshots_heading.addWidget(self.previous_frames)
-        self.next_frames = button('', lambda: self.page_frames(1))
-        self.next_frames.setObjectName('mediaIcon')
-        self.next_frames.setIcon(tile_icon('arrow_right'))
-        self.next_frames.setIconSize(QSize(22, 18))
-        self.next_frames.setFixedSize(36, 34)
-        self.next_frames.setAccessibleName('Next screenshots')
-        self.next_frames.setToolTip('Next screenshots')
-        screenshots_heading.addWidget(self.next_frames)
-        rl.addLayout(screenshots_heading)
+        control_layout.addWidget(label('CC', 'subtle'))
+        player_layout.addWidget(control_bar)
+        right_layout.addWidget(player_frame)
+
+        # Tab Widget: Transcript | Frames | Details
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet(
+            'QTabWidget::pane { border: 0; border-top: 1px solid #202020; } '
+            'QTabBar::tab { background: transparent; color: #878787; font-size: 12px; font-weight: 500; '
+            'padding: 8px 14px; border: 0; border-bottom: 2px solid transparent; } '
+            'QTabBar::tab:selected { color: #ededed; border-bottom: 2px solid #ededed; } '
+            'QTabBar::tab:hover { color: #b0b0b0; }'
+        )
+
+        # Tab 1: Transcript
+        transcript_tab = QWidget()
+        transcript_tab_layout = QVBoxLayout(transcript_tab)
+        transcript_tab_layout.setContentsMargins(0, 10, 0, 0)
+        transcript_tab_layout.setSpacing(8)
+
+        self.transcript_search = QLineEdit()
+        self.transcript_search.setPlaceholderText('Filter transcript…')
+        self.transcript_search.setStyleSheet(
+            'QLineEdit { background: #141414; border: 1px solid #242424; border-radius: 4px; '
+            'padding: 5px 8px; color: #ededed; font-size: 12px; }'
+        )
+        self.transcript_search.textChanged.connect(self.fill_transcript)
+        transcript_tab_layout.addWidget(self.transcript_search)
+
+        self.transcript = QListWidget()
+        self.transcript.setStyleSheet(
+            'QListWidget { background: #0c0c0c; border: 0; outline: none; } '
+            'QListWidget::item { padding: 6px 4px; border-bottom: 1px solid #141414; font-size: 12px; color: #d0d0d0; } '
+            'QListWidget::item:selected { background: #1a1a1a; color: #ffffff; }'
+        )
+        self.transcript.setItemDelegate(SearchHighlightDelegate(lambda: self.transcript_search.text(), self.transcript))
+        self.transcript.itemClicked.connect(self.seek_segment)
+        transcript_tab_layout.addWidget(self.transcript, 1)
+
+        exports_row = QHBoxLayout()
+        exports_row.addWidget(label('Export:', 'subtle'))
+        for fmt in ('txt', 'srt', 'vtt', 'json'):
+            exports_row.addWidget(button(fmt.upper(), lambda checked=False, f=fmt: self.open_export(f)))
+        exports_row.addStretch()
+        transcript_tab_layout.addLayout(exports_row)
+        self.tabs.addTab(transcript_tab, 'Transcript')
+
+        # Tab 2: Frames / Screenshots
+        frames_tab = QWidget()
+        frames_layout = QVBoxLayout(frames_tab)
+        frames_layout.setContentsMargins(0, 10, 0, 0)
+        frames_nav = QHBoxLayout()
+        self.frames_label = label('0 frames', 'subtle')
+        frames_nav.addWidget(self.frames_label)
+        frames_nav.addStretch()
+        prev_f = button('◀', lambda: self.page_frames(-1))
+        prev_f.setFixedWidth(28)
+        frames_nav.addWidget(prev_f)
+        next_f = button('▶', lambda: self.page_frames(1))
+        next_f.setFixedWidth(28)
+        frames_nav.addWidget(next_f)
+        frames_layout.addLayout(frames_nav)
+
         self.frames = QListWidget()
         self.frames.setViewMode(QListWidget.IconMode)
-        self.frames.setIconSize(QSize(190, 110))
-        self.frames.setGridSize(QSize(210, 145))
+        self.frames.setIconSize(QSize(130, 80))
+        self.frames.setGridSize(QSize(145, 105))
         self.frames.setResizeMode(QListWidget.Adjust)
-        self.frames.setMinimumHeight(240)
+        self.frames.setStyleSheet('QListWidget { background: #0c0c0c; border: 0; } QListWidget::item { color: #878787; font-size: 10px; }')
         self.frames.itemClicked.connect(self.seek_frame)
-        self.frames.itemDoubleClicked.connect(lambda item: open_path(Path(self.record['output']) / item.data(Qt.UserRole)['file']))
-        rl.addWidget(self.frames, 1)
-        self.workspace_split.addWidget(self.search_panel)
-        self.workspace_split.addWidget(right)
-        self.workspace_split.setStretchFactor(0, 0)
-        self.workspace_split.setStretchFactor(1, 1)
-        self.workspace_split.setSizes([285, 900])
-        host_layout.addWidget(self.workspace_split)
-        for watched in [right] + right.findChildren(QWidget):
-            watched.installEventFilter(self)
-        layout.addWidget(self.library_host, 1)
-        self._library_right = right
-        self._library_toolbar = toolbar
-        self._screenshots_heading = screenshots_heading
-        self.search_target = 285
-        self.last_search_width = 285
-        self.browse_videos.setEnabled(True)
+        self.frames.itemDoubleClicked.connect(lambda item: open_path(Path(self.record['output']) / item.data(Qt.UserRole)['file']) if self.record else None)
+        frames_layout.addWidget(self.frames, 1)
+        self.tabs.addTab(frames_tab, 'Frames')
 
+        # Tab 3: Details
+        details_tab = QWidget()
+        details_layout = QVBoxLayout(details_tab)
+        details_layout.setContentsMargins(8, 14, 8, 8)
+        details_layout.setSpacing(10)
+        self.detail_text = QTextBrowser()
+        self.detail_text.setStyleSheet('QTextBrowser { background: #0c0c0c; border: 0; color: #a0a0a0; font-size: 12px; }')
+        details_layout.addWidget(self.detail_text, 1)
+        open_folder_btn = button('Open Results Folder', self.open_result)
+        details_layout.addWidget(open_folder_btn)
+        show_explorer_btn = button('Show in File Explorer', self.open_source_file)
+        details_layout.addWidget(show_explorer_btn)
+        self.tabs.addTab(details_tab, 'Details')
+
+        right_layout.addWidget(self.tabs, 1)
+        self.main_split.addWidget(right_widget)
+
+        self.main_split.setStretchFactor(0, 3)
+        self.main_split.setStretchFactor(1, 2)
+        self.main_split.setSizes([750, 480])
+
+        root_layout.addWidget(self.main_split)
 
     def install_modular_workspace(self, window):
-        layout = self.layout()
-        layout.setContentsMargins(8, 4, 8, 8)
-        self.page_title.setStyleSheet('font-size: 16px; font-weight: 600;')
-        layout.itemAt(1).widget().hide()
-        self.desk = workspace.Workspace(window, 'library')
-        self.search_panel.setMaximumWidth(16777215)
-        transcript_panel = self.transcript.parentWidget()
-        self.video.setMaximumHeight(16777215)
-        self.frames.setMinimumHeight(100)
-        self.frames.setIconSize(QSize(138, 78))
-        self.frames.setGridSize(QSize(155, 112))
-        frames_panel = QWidget()
-        fl = QVBoxLayout(frames_panel)
-        fl.setContentsMargins(6, 6, 6, 6)
-        self._library_right.layout().removeItem(self._screenshots_heading)
-        fl.addLayout(self._screenshots_heading)
-        fl.addWidget(self.frames, 1)
-        self.desk.add_panel('transcript', 'Transcript', transcript_panel)
-        self.desk.add_panel('search', 'Search Results', self.search_panel)
-        self.desk.add_panel('preview', 'Source Preview', self.video_panel)
-        self.desk.add_panel('frames', 'Visual References', frames_panel)
-        self.desk.configure('transcript', {
-            'Research desk': [(['transcript'], 660), (['search'], 310), (['preview', 'frames'], 340)],
-            'Results on the left': [(['search'], 310), (['transcript'], 660), (['preview', 'frames'], 340)],
-            'Preview on the left': [(['preview', 'frames'], 340), (['transcript'], 660), (['search'], 310)],
-        })
-        self.workspace_bar = workspace.WorkspaceBar(self.desk, 'Video Library')
-        layout.insertWidget(0, self.workspace_bar)
-        self._library_right.layout().removeItem(self._library_toolbar)
-        layout.addLayout(self._library_toolbar)
-        self.library_host.hide()
-        layout.removeWidget(self.library_host)
-        layout.addWidget(self.desk, 1)
-        self.find_shortcut = QShortcut(QKeySequence.Find, self)
-        self.find_shortcut.setContext(Qt.WidgetWithChildrenShortcut)
-        self.find_shortcut.activated.connect(self.search.setFocus)
+        """No-op stub for compatibility with existing Window setup."""
+        self.window = window
+
+    def set_active_collection(self, collection_id):
+        self.active_collection_id = collection_id
+        if self.window and hasattr(self.window, 'state'):
+            coll_name = 'All footage'
+            for c in self.window.state.get('collections', []):
+                if c.get('id') == collection_id:
+                    coll_name = c.get('name', 'Collection')
+                    break
+            self.breadcrumb.setText(f"{coll_name}  /  Library")
+        self.populate()
 
     def set_records(self, records):
         self.records = records
         self.populate()
 
-    def search_scope_changed(self):
-        self.layer.setEnabled(self.visual_scope.isChecked())
-        self.populate()
-
-    def eventFilter(self, watched, event):
-        if (event.type() == QEvent.MouseButtonPress and self.search_panel.isVisible()
-                and watched is not self.search_panel and not self.search_panel.isAncestorOf(watched)):
-            self.collapse_search()
-        return super().eventFilter(watched, event)
+    def on_add_media(self):
+        if self.window and hasattr(self.window, 'add_media'):
+            self.window.add_media()
 
     def matching_visual_frames(self, record, query=None):
         query = (self.search.text() if query is None else query).casefold().strip()
-        if not query or not self.visual_scope.isChecked():
+        scope = self.scope_filter.currentData()
+        if not query or scope == 'audio':
             return []
-        selected_layer = self.layer.currentData()
         from vision_index import frame_match
         return [frame for frame in record.get('visual_index', {}).get('frames', [])
-                if frame_match(frame, query, selected_layer)[0]]
+                if frame_match(frame, query, '')[0]]
 
     def populate(self):
-        old = self.record.get('id') if self.record else None
-        self.list.blockSignals(True)
-        self.list.clear()
+        old_id = self.record.get('id') if self.record else None
+        self.tree.blockSignals(True)
+        self.tree.clear()
+
         query = self.search.text().casefold().strip()
+        scope = self.scope_filter.currentData()
         self.visual_matches = {}
-        selected = None
-        shown = 0
+
+        allowed_ids = None
+        if self.window and hasattr(self.window, 'state'):
+            allowed_ids = core.collection_video_ids(self.window.state, self.active_collection_id)
+
+        matched_count = 0
+        total_seconds = 0
+        total_count = len(self.records)
+
         for record in reversed(self.records):
+            vid = record.get('id')
+            if allowed_ids is not None and vid not in allowed_ids:
+                continue
+
+            total_seconds += float(record.get('duration', 0) or 0)
             transcript_values = ([s['text'] for s in record.get('segments', [])]
-                                 if self.audio_scope.isChecked() else [])
+                                 if scope in ('all', 'audio') else [])
             visual_matches = self.matching_visual_frames(record, query)
             if visual_matches:
-                self.visual_matches[record['id']] = visual_matches
+                self.visual_matches[vid] = visual_matches
+
             origins = list(search_origins(record, query))
-            if not self.audio_scope.isChecked() and 'transcript' in origins:
+            if scope == 'audio' and 'visual' in origins:
+                origins.remove('visual')
+            elif scope == 'visual' and 'transcript' in origins:
                 origins.remove('transcript')
-            if not self.visual_scope.isChecked() and 'visual' in origins:
-                origins.remove('visual')
-            elif self.visual_scope.isChecked() and 'visual' in origins and not visual_matches:
-                origins.remove('visual')
-            if self.visual_scope.isChecked() and visual_matches and 'visual' not in origins:
-                origins.append('visual')
+
             direct, embedded = query_hit_counts(transcript_values, query)
-            if query and not origins:
+            if query and not origins and not visual_matches:
                 continue
-            project = (' · ' + record['project_name']) if record.get('project_name') else ''
-            item = QListWidgetItem()
-            item.setData(Qt.UserRole, record)
-            item.setData(Qt.UserRole + 1, {
-                'title': Path(record['source']).name,
-                'meta': f"{duration_text(record['duration'])}{project}",
-                'hits': (f'{direct} direct · {embedded} indirect' if 'transcript' in origins
-                         else f'{len(visual_matches)} visual matches' if visual_matches else 'File name match') if query else '',
+
+            # First screenshot as thumbnail
+            thumb_path = None
+            for frame in record.get('frames', []):
+                file_rel = frame.get('file')
+                if file_rel:
+                    p = Path(record.get('output', '')) / file_rel
+                    if p.is_file():
+                        thumb_path = str(p)
+                        break
+
+            file_name = Path(record.get('source', '')).name
+            project = record.get('project_name') or 'Library'
+            meta_str = f"{project}  ·  {duration_text(record.get('duration', 0))}"
+
+            hits_str = ''
+            if query:
+                if 'transcript' in origins:
+                    hits_str = f"{direct + embedded} hits"
+                elif visual_matches:
+                    hits_str = f"{len(visual_matches)} visual"
+                else:
+                    hits_str = "Name match"
+
+            item = QTreeWidgetItem(['', '', duration_text(record.get('duration', 0)), hits_str, '···'])
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(0, Qt.Checked if vid in self.checked_ids else Qt.Unchecked)
+            item.setData(0, Qt.UserRole, record)
+            item.setData(1, Qt.UserRole, record)
+            item.setData(1, Qt.UserRole + 1, {
+                'title': file_name,
+                'meta': meta_str,
+                'thumbnail': thumb_path,
                 'origins': tuple(origins),
             })
-            if origins:
-                item.setToolTip('Matched by ' + ', '.join(origin.replace('filename', 'file name') for origin in origins))
-            self.list.addItem(item)
-            shown += 1
-            if record['id'] == old:
-                selected = item
-        self.search_heading_label.setText(f"SEARCH RESULTS · {shown}" if query else f"VIDEO LIBRARY · {shown}")
-        self.list.blockSignals(False)
-        if selected:
-            self.list.setCurrentItem(selected)
-        if self.record:
-            self.frame_offset = 0
-            self.fill_frames()
+            item.setTextAlignment(2, Qt.AlignVCenter | Qt.AlignRight)
+            item.setTextAlignment(3, Qt.AlignVCenter | Qt.AlignHCenter)
+            item.setTextAlignment(4, Qt.AlignVCenter | Qt.AlignHCenter)
+            self.tree.addTopLevelItem(item)
+            matched_count += 1
 
-    def collapse_search(self):
-        if hasattr(self, 'desk'):
-            self.desk.hide_panel('search')
-            return
-        if not self.search_panel.isVisible():
-            return
-        sizes = self.workspace_split.sizes()
-        if sizes and sizes[0] > 0:
-            self.last_search_width = sizes[0]
-        self.search_target = 0
-        self.search_panel.hide()
-        self.workspace_split.setSizes([0, max(1, sum(sizes))])
-        self.browse_videos.setEnabled(True)
+            if vid == old_id:
+                self.tree.setCurrentItem(item)
 
-    def open_search(self):
-        if hasattr(self, 'desk'):
-            self.desk.show_panel('search')
-            return
-        if self.search_panel.isVisible() and self.search_target:
-            return
-        self.search_panel.show()
-        self.search_target = max(245, min(365, self.last_search_width))
-        total = max(700, sum(self.workspace_split.sizes()))
-        self.workspace_split.setSizes([self.search_target, total - self.search_target])
-        self.browse_videos.setEnabled(False)
+        self.tree.blockSignals(False)
 
-    def select(self, item, previous=None):
-        if not item:
+        # Update stats
+        hours = int(total_seconds // 3600)
+        mins = int((total_seconds % 3600) // 60)
+        dur_display = f"{hours}h {mins}m indexed" if hours else f"{mins}m indexed"
+        self.footage_stats.setText(f"{total_count} files  ·  {dur_display}")
+
+        if query:
+            self.match_summary.setText(f"{matched_count} video{'s' if matched_count != 1 else ''} matched")
+            self.match_summary.show()
+        else:
+            self.match_summary.hide()
+
+        if not self.tree.currentItem() and self.tree.topLevelItemCount():
+            self.tree.setCurrentItem(self.tree.topLevelItem(0))
+
+        self.update_selection_bar()
+
+    def on_table_item_changed(self, item, column):
+        if column == 0:
+            rec = item.data(0, Qt.UserRole)
+            if rec:
+                vid = rec.get('id')
+                if item.checkState(0) == Qt.Checked:
+                    self.checked_ids.add(vid)
+                else:
+                    self.checked_ids.discard(vid)
+                self.update_selection_bar()
+
+    def on_table_item_clicked(self, item, column):
+        if column == 0:
+            # Toggle checkbox
+            cur = item.checkState(0)
+            item.setCheckState(0, Qt.Unchecked if cur == Qt.Checked else Qt.Checked)
+        elif column == 4:
+            # Three-dot item menu
+            rec = item.data(1, Qt.UserRole)
+            if rec:
+                self.show_row_menu(rec)
+
+    def on_table_selection(self, current, previous):
+        if not current:
             return
-        self.record = item.data(Qt.UserRole)
-        self.page_title.setText(Path(self.record['source']).name)
-        self.pending_seek = None
-        self.player.stop()
-        source_url = QUrl.fromLocalFile(self.record['source'])
+        rec = current.data(1, Qt.UserRole)
+        if rec:
+            self.select_record(rec)
+
+    def select_record(self, record):
+        self.record = record
+        name = Path(record.get('source', '')).name
+        self.preview_title.setText(name)
+        project = record.get('project_name') or 'Library'
+        self.preview_meta.setText(f"{project}  ·  {duration_text(record.get('duration', 0))}  ·  {record.get('source', '')}")
+
+        source_url = QUrl.fromLocalFile(record['source'])
         if self.player.source() != source_url:
+            self.player.stop()
             self.player.setSource(source_url)
+
         self.frame_offset = 0
-        query = self.search.text().strip()
-        transcript_text = ' '.join(segment['text'] for segment in self.record.get('segments', []))
-        self.transcript_search.setText(query if self.audio_scope.isChecked() and query.casefold() in transcript_text.casefold() else '')
         self.fill_frames()
         self.fill_transcript()
-        matches = self.visual_matches.get(self.record['id'], [])
-        if matches and not self.transcript_search.text():
-            self.frames.setCurrentRow(0)
-            self.seek_frame(self.frames.item(0))
-        elif self.transcript.count() and self.transcript_search.text():
-            self.transcript.setCurrentRow(0)
-            self.seek_segment(self.transcript.item(0))
+        self.fill_details()
 
-    def toggle_source_preview(self):
-        if hasattr(self, 'desk'):
-            dock = self.desk.panels['preview']
-            self.desk.show_panel('preview') if dock.isHidden() else self.desk.hide_panel('preview')
+    def update_selection_bar(self):
+        count = len(self.checked_ids)
+        self.selection_label.setText(f"{count} selected")
+        self.add_to_collection_btn.setEnabled(count > 0)
+
+    def on_add_to_collection(self):
+        if not self.checked_ids or not self.window:
             return
-        visible = self.video_panel.isVisible()
-        self.video_panel.setVisible(not visible)
-        self.preview_toggle.setText('Preview' if visible else 'Hide preview')
-        if not visible:
-            self.media_split.setSizes([720, 250])
+        dialog = CollectionPickerDialog(self.window.state, list(self.checked_ids), self)
+        if dialog.exec() == QDialog.Accepted:
+            self.window.save_timer.start(100)
+            if hasattr(self.window, 'refresh_collections_sidebar'):
+                self.window.refresh_collections_sidebar()
+
+    def on_overflow_menu(self):
+        menu = QMenu(self)
+        a_select_all = menu.addAction('Select all in view')
+        a_deselect_all = menu.addAction('Deselect all')
+        menu.addSeparator()
+        a_export_selected = menu.addAction('Export selected videos to folder…')
+        action = menu.exec(QCursor.pos())
+        if action == a_select_all:
+            for i in range(self.tree.topLevelItemCount()):
+                item = self.tree.topLevelItem(i)
+                item.setCheckState(0, Qt.Checked)
+        elif action == a_deselect_all:
+            self.checked_ids.clear()
+            for i in range(self.tree.topLevelItemCount()):
+                item = self.tree.topLevelItem(i)
+                item.setCheckState(0, Qt.Unchecked)
+            self.update_selection_bar()
+        elif action == a_export_selected and self.checked_ids:
+            dest = QFileDialog.getExistingDirectory(self, 'Export Selected Videos')
+            if dest:
+                copied, skipped, errors = core.export_collection(
+                    self.window.state, 'custom', dest,
+                    results=[r for r in self.records if r.get('id') in self.checked_ids])
+                QMessageBox.information(self, 'Export Complete', f"Exported {copied} video{'s' if copied != 1 else ''} to:\n{dest}")
+
+    def on_preview_menu(self):
+        if not self.record:
+            return
+        menu = QMenu(self)
+        menu.addAction('Show in Explorer', self.open_source_file)
+        menu.addAction('Open Results Folder', self.open_result)
+        menu.exec(QCursor.pos())
+
+    def show_row_menu(self, record):
+        menu = QMenu(self)
+        menu.addAction('Show in Explorer', lambda: reveal_path(record.get('source', '')))
+        menu.addAction('Open Results Folder', lambda: open_path(record.get('output', '')))
+        menu.addAction('Add to Collection…', lambda: CollectionPickerDialog(self.window.state, [record.get('id')], self).exec())
+        menu.exec(QCursor.pos())
 
     def fill_frames(self):
         self.frames.clear()
         if not self.record:
+            self.frames_label.setText('0 frames')
             return
         matches = self.visual_matches.get(self.record['id'], [])
         frames = matches or self.record.get('frames', [])
         for f in frames[self.frame_offset:self.frame_offset + 60]:
-            item = QListWidgetItem(QIcon(str(Path(self.record['output']) / f['file'])), core.timestamp(f['time']))
+            p = Path(self.record.get('output', '')) / f.get('file', '')
+            item = QListWidgetItem(QIcon(str(p)), duration_text(f.get('time', 0)))
             item.setData(Qt.UserRole, f)
             self.frames.addItem(item)
-        suffix = ' visual matches' if matches else ''
-        self.page_label.setText(f'{self.frame_offset + 1 if frames else 0}–{min(self.frame_offset + 60, len(frames))} of {len(frames):,}{suffix}')
+        total = len(frames)
+        self.frames_label.setText(f"{self.frame_offset + 1}–{min(self.frame_offset + 60, total)} of {total}")
 
     def page_frames(self, direction):
         if self.record:
@@ -2049,64 +2272,44 @@ class ResultsPage(QWidget):
         self.transcript.clear()
         if not self.record:
             return
-        query = self.transcript_search.text().casefold()
+        query = self.transcript_search.text().casefold().strip()
         for segment in self.record.get('segments', []):
-            if query and query not in segment['text'].casefold():
+            text = segment.get('text', '')
+            if query and query not in text.casefold():
                 continue
-            item = QListWidgetItem(f"{duration_text(segment['start'])}   {segment['text'].strip()}")
+            item = QListWidgetItem(f"{duration_text(segment.get('start', 0))}   {text.strip()}")
             item.setData(Qt.UserRole, segment)
             self.transcript.addItem(item)
         if not self.record.get('segments'):
-            self.transcript.addItem(self.record.get('notice', 'No transcript for this video.'))
-        self.transcript_hit.setText(f'1 / {self.transcript.count()}' if query and self.transcript.count() else '—')
+            self.transcript.addItem(self.record.get('notice', 'No transcript available.'))
 
-    def page_transcript_hit(self, direction):
-        count = self.transcript.count()
-        if not count:
+    def fill_details(self):
+        if not self.record:
+            self.detail_text.clear()
             return
-        row = self.transcript.currentRow()
-        row = (row + direction) % count if row >= 0 else (0 if direction > 0 else count - 1)
-        self.transcript.setCurrentRow(row)
-        self.transcript.scrollToItem(self.transcript.item(row))
-        self.seek_segment(self.transcript.item(row))
-        if self.transcript_search.text():
-            self.transcript_hit.setText(f'{row + 1} / {count}')
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if self.width() < 900 and self.search_panel.isVisible() and self.video_panel.isVisible():
-            self.video_panel.hide()
-            self.preview_toggle.setText('Preview')
-
-    def seek_frame(self, item):
-        if item and item.data(Qt.UserRole):
-            self.seek_to(round(item.data(Qt.UserRole)['time'] * 1000))
-
-    def seek_to(self, milliseconds):
-        self.pending_seek = milliseconds
-        self.position(milliseconds)
-        if not getattr(self, '_seek_connected', False):
-            self.player.mediaStatusChanged.connect(self.apply_pending_seek)
-            self._seek_connected = True
-        self.player.setPosition(milliseconds)
-        self.apply_pending_seek(self.player.mediaStatus())
-
-    def apply_pending_seek(self, status):
-        if status in (QMediaPlayer.LoadedMedia, QMediaPlayer.BufferedMedia) and getattr(self, 'pending_seek', None) is not None:
-            milliseconds, self.pending_seek = self.pending_seek, None
-            self.player.setPosition(milliseconds)
-            self.position(milliseconds)
+        lines = [
+            f"<b>Source:</b> {self.record.get('source', '')}",
+            f"<b>Duration:</b> {duration_text(self.record.get('duration', 0))}",
+            f"<b>Output:</b> {self.record.get('output', '')}",
+            f"<b>Processed:</b> {time.strftime('%Y-%m-%d %H:%M', time.localtime(self.record.get('processed_at', time.time())))}",
+            f"<b>Transcript Segments:</b> {len(self.record.get('segments', []))}",
+            f"<b>Screenshots:</b> {len(self.record.get('frames', []))}",
+        ]
+        self.detail_text.setHtml('<br>'.join(lines))
 
     def seek_segment(self, item):
-        segment = item.data(Qt.UserRole)
-        if segment:
-            self.seek_to(round(segment['start'] * 1000))
-            frames = self.record.get('frames', [])
-            if frames:
-                index = min(range(len(frames)), key=lambda i: abs(frames[i]['time'] - segment['start']))
-                self.frame_offset = index // 60 * 60
-                self.fill_frames()
-                self.frames.setCurrentRow(index % 60)
+        seg = item.data(Qt.UserRole)
+        if seg:
+            self.seek_to(round(seg.get('start', 0) * 1000))
+
+    def seek_frame(self, item):
+        val = item.data(Qt.UserRole)
+        if val and 'time' in val:
+            self.seek_to(round(val['time'] * 1000))
+
+    def seek_to(self, milliseconds):
+        self.player.setPosition(milliseconds)
+        self.position(milliseconds)
 
     def position(self, n):
         if not self.seek.isSliderDown():
@@ -2120,17 +2323,16 @@ class ResultsPage(QWidget):
             self.player.play()
 
     def sync_play_icon(self, state):
-        playing = state == QMediaPlayer.PlayingState
+        playing = (state == QMediaPlayer.PlayingState)
         self.play_button.setIcon(tile_icon('pause' if playing else 'play'))
-        self.play_button.setToolTip('Pause' if playing else 'Play')
 
     def open_result(self):
         if self.record:
-            open_path(self.record['output'])
+            open_path(self.record.get('output', ''))
 
     def open_source_file(self):
         if self.record:
-            reveal_path(self.record['source'])
+            reveal_path(self.record.get('source', ''))
 
     def open_export(self, fmt):
         if self.record:
@@ -2261,6 +2463,91 @@ class LibraryPickerDialog(QDialog):
             frame_item = QListWidgetItem(QIcon(path), duration_text(frame.get('time', 0)))
             frame_item.setData(Qt.UserRole, frame)
             self.frames.addItem(frame_item)
+
+
+class CollectionPickerDialog(QDialog):
+    """Dialog to select an existing collection or create a new one, then add videos to it."""
+    def __init__(self, state, video_ids, parent=None):
+        super().__init__(parent)
+        self.state = state
+        self.video_ids = list(video_ids)
+        self.selected_collection_id = None
+        self.setWindowTitle('Add to Collection')
+        self.setFixedWidth(380)
+        self.setStyleSheet('QDialog { background: #141414; border: 1px solid #282828; border-radius: 8px; }')
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(14)
+
+        title = label('Add to Collection', 'title')
+        title.setStyleSheet('font-size: 16px; font-weight: 600;')
+        layout.addWidget(title)
+        count_lbl = label(f"Adding {len(self.video_ids)} video{'s' if len(self.video_ids) != 1 else ''}", 'subtle')
+        layout.addWidget(count_lbl)
+
+        self.coll_list = QListWidget()
+        self.coll_list.setStyleSheet(
+            'QListWidget { background: #111111; border: 1px solid #282828; border-radius: 6px; } '
+            'QListWidget::item { padding: 9px 12px; border-bottom: 1px solid #1e1e1e; font-size: 13px; } '
+            'QListWidget::item:selected { background: #1e1e1e; color: #ffffff; }'
+        )
+        self.populate_collections()
+        layout.addWidget(self.coll_list)
+
+        new_row = QHBoxLayout()
+        self.new_input = QLineEdit()
+        self.new_input.setPlaceholderText('New collection name…')
+        new_row.addWidget(self.new_input, 1)
+        create_btn = button('Create', self.create_and_select)
+        new_row.addWidget(create_btn)
+        layout.addLayout(new_row)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        cancel_btn = button('Cancel', self.reject)
+        btn_row.addWidget(cancel_btn)
+        self.add_btn = button('Add', self.apply_add, primary=True)
+        self.add_btn.setEnabled(False)
+        btn_row.addWidget(self.add_btn)
+        layout.addLayout(btn_row)
+
+        self.coll_list.itemSelectionChanged.connect(self.selection_changed)
+        if self.coll_list.count():
+            self.coll_list.setCurrentRow(0)
+
+    def populate_collections(self):
+        self.coll_list.clear()
+        for c in self.state.get('collections', []):
+            if c.get('id') == 'all':
+                continue
+            item = QListWidgetItem(c.get('name', 'Untitled'))
+            item.setData(Qt.UserRole, c.get('id'))
+            count = len(c.get('video_ids', []))
+            item.setText(f"{c.get('name', 'Untitled')}  ({count})")
+            self.coll_list.addItem(item)
+
+    def selection_changed(self):
+        item = self.coll_list.currentItem()
+        self.add_btn.setEnabled(item is not None)
+        if item:
+            self.selected_collection_id = item.data(Qt.UserRole)
+
+    def create_and_select(self):
+        name = self.new_input.text().strip()
+        if not name:
+            return
+        c = core.create_collection(self.state, name)
+        self.populate_collections()
+        self.new_input.clear()
+        for i in range(self.coll_list.count()):
+            if self.coll_list.item(i).data(Qt.UserRole) == c['id']:
+                self.coll_list.setCurrentRow(i)
+                break
+
+    def apply_add(self):
+        if self.selected_collection_id:
+            core.add_to_collection(self.state, self.selected_collection_id, self.video_ids)
+            self.accept()
 
 
 class InkCanvas(QWidget):
@@ -4473,60 +4760,103 @@ class Window(QMainWindow):
         outer.setSpacing(0)
         sidebar = QFrame()
         sidebar.setObjectName('sidebar')
-        sidebar.setFixedWidth(76)
+        sidebar.setFixedWidth(180)
         side = QVBoxLayout(sidebar)
-        side.setContentsMargins(4, 14, 4, 14)
-        brand = QVBoxLayout()
-        brand.setAlignment(Qt.AlignHCenter)
+        side.setContentsMargins(10, 16, 10, 14)
+        side.setSpacing(4)
+
+        # Brand header
+        brand = QHBoxLayout()
+        brand.setContentsMargins(4, 0, 4, 14)
+        brand.setSpacing(10)
         mark = QLabel()
         asset = Path(getattr(sys, '_MEIPASS', core.ROOT)) / 'assets' / 'transpro.svg'
         mark.setPixmap(QIcon(str(asset)).pixmap(20, 20))
-        mark.setAlignment(Qt.AlignCenter)
         brand.addWidget(mark)
-        brand_name = label('Tracer', 'brand')
-        brand_name.setAlignment(Qt.AlignCenter)
-        brand_name.setStyleSheet('font-size: 15px;')
+        brand_name = label('TRACER', 'brand')
+        brand_name.setStyleSheet('font-size: 13px; font-weight: 700; letter-spacing: 2.5px; color: #ededed;')
         brand.addWidget(brand_name)
+        brand.addStretch()
         side.addLayout(brand)
-        side.addSpacing(18)
+
+        # Primary Navigation items
         self.nav = []
         navigation = (
-            ('Queue', 'queue'), ('Library', 'library'), ('Paper Edit', 'paper'),
-            ('Storyline', 'storyline'), ('Settings', 'settings'))
+            ('Queue', 'queue'),
+            ('Library', 'library'),
+            ('Paper Edit', 'paper'),
+            ('Storyline', 'storyline'),
+        )
         for i, (name, icon_name) in enumerate(navigation):
             b = QToolButton()
-            b.setText(name)
+            b.setText(f'  {name}')
             b.setIcon(tile_icon(icon_name))
-            b.setIconSize(QSize(18, 18))
-            b.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-            b.setFixedHeight(54)
+            b.setIconSize(QSize(16, 16))
+            b.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            b.setFixedHeight(34)
+            b.setMinimumWidth(156)
             b.clicked.connect(lambda checked=False, index=i: self.navigate(index))
             b.setObjectName('nav')
             b.setCheckable(True)
-            b.setToolTip((
-                'Folder processing queue', 'Searchable video library',
-                'Write and shape the story from transcripts', 'Simple stackable sequence timeline', 'Settings')[i])
             b.setAccessibleName(name)
             self.nav.append(b)
             side.addWidget(b)
+
+        side.addSpacing(14)
+
+        # Collections Section
+        coll_hdr_layout = QHBoxLayout()
+        coll_hdr_layout.setContentsMargins(6, 4, 4, 4)
+        coll_header = label('COLLECTIONS', 'sectionHeader')
+        coll_header.setStyleSheet('color: #666666; font-size: 10px; font-weight: 700; letter-spacing: 1px;')
+        coll_hdr_layout.addWidget(coll_header)
+        coll_hdr_layout.addStretch()
+        new_coll_btn = button('+', self.prompt_new_collection)
+        new_coll_btn.setFixedSize(20, 20)
+        new_coll_btn.setStyleSheet('QPushButton { background: transparent; border: 0; color: #777; font-size: 14px; font-weight: bold; } QPushButton:hover { color: #eee; }')
+        new_coll_btn.setToolTip('Create new collection')
+        coll_hdr_layout.addWidget(new_coll_btn)
+        side.addLayout(coll_hdr_layout)
+
+        self.collections_container = QVBoxLayout()
+        self.collections_container.setSpacing(2)
+        side.addLayout(self.collections_container)
+        self.refresh_collections_sidebar()
+
         side.addStretch()
+
+        # Resource meters
         self.usage_labels = {}
         for key in ('GPU', 'VRAM', 'RAM'):
             meter = label(f'{key}  — / —', 'resourceMeter')
-            meter.setAlignment(Qt.AlignCenter)
+            meter.setStyleSheet('color: #555555; font-size: 9px; padding-left: 6px;')
             side.addWidget(meter)
             self.usage_labels[key.casefold()] = meter
         side.addSpacing(10)
+
+        # Settings Button at bottom
+        self.settings_btn = QToolButton()
+        self.settings_btn.setText('  Settings')
+        self.settings_btn.setIcon(tile_icon('settings'))
+        self.settings_btn.setIconSize(QSize(16, 16))
+        self.settings_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.settings_btn.setFixedHeight(34)
+        self.settings_btn.setMinimumWidth(156)
+        self.settings_btn.clicked.connect(lambda: self.navigate(4))
+        self.settings_btn.setObjectName('nav')
+        self.settings_btn.setCheckable(True)
+        self.nav.append(self.settings_btn)
+        side.addWidget(self.settings_btn)
+
         version = label('Tracer · ' + core.APP_VERSION.rsplit('.', 1)[0], 'subtle')
-        version.setAlignment(Qt.AlignCenter)
-        version.setStyleSheet('font-size: 9px;')
+        version.setStyleSheet('font-size: 9px; color: #444444; padding-left: 6px;')
         side.addWidget(version)
         outer.addWidget(sidebar)
         self.pages = QStackedWidget()
         queue_page = self.make_queue()
         self.paper_edit_page = PaperEditPage(self)
         self.projects_page = ProjectsPage(self)
-        self.results = ResultsPage()
+        self.results = ResultsPage(self)
         self.results.install_modular_workspace(self)
         self.results.set_records(self.state['results'])
         self.pages.addWidget(queue_page)
@@ -4565,6 +4895,78 @@ class Window(QMainWindow):
             self.paper_edit_page.player.pause()
         if index != 3 and hasattr(self, 'projects_page'):
             self.projects_page.stop_sequence_playback()
+
+    def refresh_collections_sidebar(self):
+        if not hasattr(self, 'collections_container'):
+            return
+        while self.collections_container.count():
+            item = self.collections_container.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        self.collection_buttons = {}
+        for c in self.state.get('collections', []):
+            cid = c.get('id')
+            name = c.get('name', 'Untitled')
+            icon_name = 'interview' if 'interview' in name.casefold() else 'broll' if 'b-roll' in name.casefold() or 'broll' in name.casefold() else 'archive' if 'archive' in name.casefold() else 'collection'
+            btn = QToolButton()
+            btn.setText(f'  {name}')
+            btn.setIcon(tile_icon(icon_name))
+            btn.setIconSize(QSize(14, 14))
+            btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            btn.setFixedHeight(30)
+            btn.setMinimumWidth(156)
+            btn.setObjectName('collectionItem')
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda checked=False, col_id=cid: self.select_collection(col_id))
+            btn.setContextMenuPolicy(Qt.CustomContextMenu)
+            btn.customContextMenuRequested.connect(lambda pos, col_id=cid: self.show_collection_context_menu(pos, col_id))
+            self.collections_container.addWidget(btn)
+            self.collection_buttons[cid] = btn
+
+    def select_collection(self, collection_id):
+        for cid, btn in getattr(self, 'collection_buttons', {}).items():
+            btn.setChecked(cid == collection_id)
+        self.navigate(1)
+        if hasattr(self, 'results'):
+            self.results.set_active_collection(collection_id)
+
+    def prompt_new_collection(self):
+        name, ok = QInputDialog.getText(self, 'New Collection', 'Collection name:')
+        if ok and name.strip():
+            core.create_collection(self.state, name.strip())
+            self.save_timer.start(100)
+            self.refresh_collections_sidebar()
+
+    def show_collection_context_menu(self, pos, collection_id):
+        coll = next((c for c in self.state.get('collections', []) if c.get('id') == collection_id), None)
+        if not coll:
+            return
+        menu = QMenu(self)
+        if not coll.get('builtin'):
+            a_rename = menu.addAction('Rename…')
+            a_delete = menu.addAction('Delete Collection')
+            menu.addSeparator()
+        else:
+            a_rename = a_delete = None
+        a_export = menu.addAction('Export Files to Folder…')
+        btn = self.collection_buttons.get(collection_id)
+        action = menu.exec(btn.mapToGlobal(pos) if btn else QCursor.pos())
+        if a_rename and action == a_rename:
+            new_name, ok = QInputDialog.getText(self, 'Rename Collection', 'New name:', text=coll.get('name', ''))
+            if ok and new_name.strip():
+                core.rename_collection(self.state, collection_id, new_name.strip())
+                self.save_timer.start(100)
+                self.refresh_collections_sidebar()
+        elif a_delete and action == a_delete:
+            core.delete_collection(self.state, collection_id)
+            self.save_timer.start(100)
+            self.refresh_collections_sidebar()
+        elif action == a_export:
+            dest = QFileDialog.getExistingDirectory(self, f"Export '{coll.get('name')}'")
+            if dest:
+                copied, skipped, errors = core.export_collection(self.state, collection_id, dest)
+                QMessageBox.information(self, 'Export Complete', f"Exported {copied} video{'s' if copied != 1 else ''} to:\n{dest}")
 
     def refresh_usage_metrics(self):
         if self.usage_task_active:

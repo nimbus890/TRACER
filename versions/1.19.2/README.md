@@ -1,4 +1,4 @@
-# Tracer 1.18
+# Tracer 1.19.2
 
 Tracer is a local Windows workspace for turning video folders into searchable transcripts, screenshots, paper edits, and simple Premiere-ready story sequences.
 
@@ -6,7 +6,16 @@ Tracer is a local Windows workspace for turning video folders into searchable tr
 
 Double-click **Launch Tracer.vbs** to open the working build. Tracer keeps source media in place and stores its local library, models, and editing state under **data**.
 
-The launchable 1.18 source is preserved under **versions/1.18**. Earlier snapshots remain under **versions**. This release uses the existing Python runtime; an executable/installer is not included.
+The launchable 1.19.2 source is preserved under **versions/1.19.2**. Earlier snapshots remain under **versions**. This release uses the existing Python runtime; an executable/installer is not included.
+
+## Midday Editorial UI · 1.19.2
+
+Tracer 1.19.2 introduces a complete interface redesign inspired by the Midday dark editorial aesthetic:
+- **Clean Dark Theme:** Deep `#0c0c0c` tones, refined neutral text, and amber search highlights.
+- **Enhanced Sidebar Navigation:** Expanded 180px navigation rail with icon-plus-text labels, dynamic Collections management, and bottom-pinned Settings alongside system resource monitors (GPU / VRAM / RAM).
+- **Library Table View:** High-density footage table with multi-select checkboxes, embedded thumbnails, video duration, and match counts.
+- **Collections & Export:** User-created collections for footage categorization, multi-select action bar ("Add to Collection"), and folder-copy export for duplicating footage to designated drives/directories.
+- **Streamlined Inspector:** Right-side preview panel featuring video playback, transcript filtering, screenshot contact sheets, and detailed clip metadata.
 
 ## Interaction fixes · 1.18
 

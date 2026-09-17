@@ -116,6 +116,64 @@ class AppInteractionTests(unittest.TestCase):
         finally:
             dialog.close()
 
+    def test_collections_crud_and_export(self):
+        state = {'collections': [{'id': 'all', 'name': 'All footage', 'builtin': True, 'video_ids': []}]}
+        coll = core.create_collection(state, 'Interviews')
+        self.assertEqual(coll['name'], 'Interviews')
+        self.assertIn(coll, state['collections'])
+
+        core.add_to_collection(state, coll['id'], ['v1', 'v2', 'v1'])
+        self.assertEqual(core.collection_video_ids(state, coll['id']), {'v1', 'v2'})
+
+        core.remove_from_collection(state, coll['id'], ['v1'])
+        self.assertEqual(core.collection_video_ids(state, coll['id']), {'v2'})
+
+        core.rename_collection(state, coll['id'], 'Deep Interviews')
+        self.assertEqual(coll['name'], 'Deep Interviews')
+
+        # Test export
+        with tempfile.TemporaryDirectory() as src_dir, tempfile.TemporaryDirectory() as dest_dir:
+            f1 = Path(src_dir) / 'interview1.mp4'
+            f1.write_bytes(b'video content')
+            results = [{'id': 'v2', 'source': str(f1), 'duration': 10}]
+            copied, skipped, errors = core.export_collection(state, coll['id'], dest_dir, results=results)
+            self.assertEqual(copied, 1)
+            self.assertTrue((Path(dest_dir) / 'interview1.mp4').is_file())
+
+        core.delete_collection(state, coll['id'])
+        self.assertEqual(len(state['collections']), 1)
+
+    def test_results_page_table_population_and_collection_filter(self):
+        state = {'collections': [
+            {'id': 'all', 'name': 'All footage', 'builtin': True, 'video_ids': []},
+            {'id': 'c1', 'name': 'Interviews', 'video_ids': ['vid1']}
+        ]}
+        class FakeWindow(app.QWidget):
+            def __init__(self):
+                super().__init__()
+                self.state = state
+
+        win = FakeWindow()
+        page = app.ResultsPage(win)
+        try:
+            records = [
+                {'id': 'vid1', 'source': 'clip1.mp4', 'duration': 42, 'segments': [{'text': 'hello world'}]},
+                {'id': 'vid2', 'source': 'clip2.mp4', 'duration': 18, 'segments': [{'text': 'river story'}]},
+            ]
+            page.set_records(records)
+            self.assertEqual(page.tree.topLevelItemCount(), 2)
+
+            page.set_active_collection('c1')
+            self.assertEqual(page.tree.topLevelItemCount(), 1)
+
+            page.set_active_collection('all')
+            self.assertEqual(page.tree.topLevelItemCount(), 2)
+
+            page.search.setText('river')
+            self.assertEqual(page.tree.topLevelItemCount(), 1)
+        finally:
+            page.close()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -8,6 +8,15 @@ Double-click **Launch Tracer.vbs** to open the working build. Tracer keeps sourc
 
 The launchable 1.19.2 source is preserved under **versions/1.19.2**. Earlier snapshots remain under **versions**. This release uses the existing Python runtime; an executable/installer is not included.
 
+## Midday Editorial UI · 1.19.2
+
+Tracer 1.19.2 introduces a complete interface redesign inspired by the Midday dark editorial aesthetic:
+- **Clean Dark Theme:** Deep `#0c0c0c` tones, refined neutral text, and amber search highlights.
+- **Enhanced Sidebar Navigation:** Expanded 180px navigation rail with icon-plus-text labels, dynamic Collections management, and bottom-pinned Settings alongside system resource monitors (GPU / VRAM / RAM).
+- **Library Table View:** High-density footage table with multi-select checkboxes, embedded thumbnails, video duration, and match counts.
+- **Collections & Export:** User-created collections for footage categorization, multi-select action bar ("Add to Collection"), and folder-copy export for duplicating footage to designated drives/directories.
+- **Streamlined Inspector:** Right-side preview panel featuring video playback, transcript filtering, screenshot contact sheets, and detailed clip metadata.
+
 ## Interaction fixes · 1.18
 
 Queue selection survives refreshes and the delete action removes the selected queue entry. Visual search selection seeks the source video to the matching timestamp, including while the media is loading. Colored search-origin icons sit beside hit counts; visual-only hits omit transcript direct/indirect counts. Sliders jump to the clicked position. AI sampling shares Capture every and Scene changes settings, with boundary samples retained. Existing indexed footage needs reprocessing to acquire the new sampling schedule.

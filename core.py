@@ -162,6 +162,7 @@ def load_state():
     try:
         value = json.loads((DATA / 'library.json').read_text(encoding='utf-8'))
         value.setdefault('projects', [])
+        value.setdefault('collections', [{'id': 'all', 'name': 'All footage', 'builtin': True}])
         for collection in [value.get('folders', [])] + [project.get('folders', []) for project in value['projects']]:
             for folder in collection:
                 for video in folder.get('files', []):
@@ -169,11 +170,95 @@ def load_state():
                         video['status'] = 'Interrupted'
         return value
     except FileNotFoundError:
-        return dict(folders=[], projects=[], settings=DEFAULTS.copy(), results=[])
+        return dict(folders=[], projects=[], collections=[{'id': 'all', 'name': 'All footage', 'builtin': True}], settings=DEFAULTS.copy(), results=[])
     except (ValueError, TypeError, KeyError):
         backup = DATA / f'library-recovery-{int(time.time())}.json'
         shutil.copy2(DATA / 'library.json', backup)
-        return dict(folders=[], projects=[], settings=DEFAULTS.copy(), results=[], recovery=str(backup))
+        return dict(folders=[], projects=[], collections=[{'id': 'all', 'name': 'All footage', 'builtin': True}], settings=DEFAULTS.copy(), results=[], recovery=str(backup))
+
+
+def create_collection(state, name):
+    """Create a new user collection and return it."""
+    collection = {'id': uuid.uuid4().hex, 'name': name, 'video_ids': []}
+    state.setdefault('collections', []).append(collection)
+    return collection
+
+
+def delete_collection(state, collection_id):
+    """Remove a collection by ID. Built-in collections cannot be deleted."""
+    state['collections'] = [c for c in state.get('collections', [])
+                            if c.get('id') != collection_id or c.get('builtin')]
+
+
+def rename_collection(state, collection_id, new_name):
+    """Rename a collection. Built-in collections cannot be renamed."""
+    for c in state.get('collections', []):
+        if c.get('id') == collection_id and not c.get('builtin'):
+            c['name'] = new_name
+            break
+
+
+def add_to_collection(state, collection_id, video_ids):
+    """Add video IDs to a collection, avoiding duplicates."""
+    for c in state.get('collections', []):
+        if c.get('id') == collection_id:
+            existing = set(c.get('video_ids', []))
+            c.setdefault('video_ids', []).extend(
+                vid for vid in video_ids if vid not in existing)
+            break
+
+
+def remove_from_collection(state, collection_id, video_ids):
+    """Remove video IDs from a collection."""
+    remove_set = set(video_ids)
+    for c in state.get('collections', []):
+        if c.get('id') == collection_id:
+            c['video_ids'] = [v for v in c.get('video_ids', []) if v not in remove_set]
+            break
+
+
+def collection_video_ids(state, collection_id):
+    """Return the set of video IDs in a collection, or None for 'all'."""
+    if collection_id == 'all':
+        return None  # None means show everything
+    for c in state.get('collections', []):
+        if c.get('id') == collection_id:
+            return set(c.get('video_ids', []))
+    return set()
+
+
+def export_collection(state, collection_id, destination, results=None):
+    """Copy source video files from a collection into destination folder.
+    Returns (copied_count, skipped_count, errors)."""
+    results = results or state.get('results', [])
+    video_ids = collection_video_ids(state, collection_id)
+    destination = Path(destination)
+    destination.mkdir(parents=True, exist_ok=True)
+    copied = 0
+    skipped = 0
+    errors = []
+    for record in results:
+        if video_ids is not None and record.get('id') not in video_ids:
+            continue
+        source = Path(record.get('source', ''))
+        if not source.is_file():
+            skipped += 1
+            continue
+        target = destination / source.name
+        # Avoid name collisions
+        if target.exists():
+            stem = target.stem
+            suffix = target.suffix
+            counter = 1
+            while target.exists():
+                target = destination / f'{stem}_{counter}{suffix}'
+                counter += 1
+        try:
+            shutil.copy2(source, target)
+            copied += 1
+        except OSError as e:
+            errors.append((str(source), str(e)))
+    return copied, skipped, errors
 
 
 def model_ready(name):
