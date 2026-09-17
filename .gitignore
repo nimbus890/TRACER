@@ -9,10 +9,16 @@ __pycache__/
 # Build artifacts
 build/
 build-release/
+build-tools/
 dist/
+release/
 
 # Runtime data
 data/
+
+# Design assets and verification output
+design/
+verification/
 
 # IDE / editor
 .vscode/
