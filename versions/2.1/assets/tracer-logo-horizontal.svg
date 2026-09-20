@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="120" viewBox="0 0 480 120">
+  <defs>
+    <mask id="h-frame-mask">
+      <rect width="480" height="120" fill="white"/>
+      <polygon points="15,178 85,131 85,148 27,187" fill="black"/>
+      <polygon points="148,84 175,64 175,108 148,128" fill="black"/>
+    </mask>
+    <style>
+      .brand-title {
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 700;
+        font-size: 38px;
+        fill: #ffffff;
+        letter-spacing: 12px;
+      }
+      .brand-sub {
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 500;
+        font-size: 11px;
+        fill: #82929e;
+        letter-spacing: 5px;
+      }
+    </style>
+  </defs>
+
+  <!-- Symbol on left -->
+  <g transform="translate(62, 60) scale(0.52) translate(-124, -130)">
+    <g fill="none" stroke="#ffffff" stroke-width="9.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="28.5" y="64.5" width="132" height="136" rx="20" mask="url(#h-frame-mask)"/>
+      <path d="M 28.5 186 L 82 148" mask="url(#h-frame-mask)"/>
+      <path d="M 98.5 178 L 98.5 137 A 9 9 0 0 0 89.5 128 L 63 128 A 7.5 7.5 0 0 1 63 113 L 138 113 Q 150 113 159 105 L 197 71.5" stroke-linecap="round"/>
+    </g>
+    <circle cx="214.5" cy="63.5" r="9.2" fill="#41e7f6"/>
+  </g>
+
+  <!-- Wordmark and tagline on right -->
+  <text x="140" y="62" class="brand-title">TRACER</text>
+  <text x="142" y="85" class="brand-sub">FIND WHAT&apos;S INSIDE</text>
+</svg>

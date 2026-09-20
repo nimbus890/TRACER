@@ -1,15 +1,15 @@
 [Setup]
 AppId={{32C7593A-778E-4DA9-9B44-29F5EE5D815E}
 AppName=Tracer
-AppVersion=1.18.0
+AppVersion=2.3.0
 AppPublisher=Tracer
 DefaultDirName={localappdata}\Programs\Tracer
 DefaultGroupName=Tracer
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputDir=release
-OutputBaseFilename=Tracer-Setup-1.18.0
+OutputDir=Here you go
+OutputBaseFilename=Tracer-Setup-2.3.0
 Compression=lzma2/fast
 SolidCompression=yes
 WizardStyle=modern
